@@ -172,13 +172,14 @@ def setup_env(config: Config, ref_data: tuple[torch.Tensor, ...]) -> MJWPEnv:
 def _weight_diff_qpos(config: Config) -> torch.Tensor:
     w = torch.ones(config.nv, device=config.device)
     if config.embodiment_type == "bimanual":
-        half_dof = int(config.nu // 2)
+        robot_nv = config.nv - 12
+        half_dof = robot_nv // 2
         w[:3] = config.base_pos_rew_scale
         w[3:6] = config.base_rot_rew_scale
         w[6:half_dof] = config.joint_rew_scale
         w[half_dof : half_dof + 3] = config.base_pos_rew_scale
         w[half_dof + 3 : half_dof + 6] = config.base_rot_rew_scale
-        w[half_dof + 6 : config.nu] = config.joint_rew_scale
+        w[half_dof + 6 : robot_nv] = config.joint_rew_scale
         # object: weights live in nv-space (6-dim per freejoint), regardless of nq_obj
         w[-12:-9] = config.pos_rew_scale
         w[-9:-6] = config.rot_rew_scale
@@ -187,7 +188,7 @@ def _weight_diff_qpos(config: Config) -> torch.Tensor:
     elif config.embodiment_type in ["right", "left"]:
         w[:3] = config.base_pos_rew_scale
         w[3:6] = config.base_rot_rew_scale
-        w[6 : config.nu] = config.joint_rew_scale
+        w[6 : config.nv - 6] = config.joint_rew_scale
         w[-6:-3] = config.pos_rew_scale
         w[-3:] = config.rot_rew_scale
     elif config.embodiment_type in ["humanoid"]:  # humanoid robot

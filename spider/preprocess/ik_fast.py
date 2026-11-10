@@ -31,6 +31,7 @@ from loop_rate_limiters import RateLimiter
 from spider import ROOT
 from spider.io import get_processed_data_dir
 from spider.mujoco_utils import get_viewer
+from spider.robot_model import actuator_qpos_indices, project_joint_equalities
 
 # MANO 21-joint skeleton bones (parent -> child) for reference visualization
 _MANO_SKELETON_BONES = [
@@ -268,14 +269,6 @@ def main(
             embodiment_type,
         )
 
-    # Object DOF count
-    if embodiment_type == "bimanual":
-        nq_obj = 14
-    elif embodiment_type in ["right", "left"]:
-        nq_obj = 7
-    else:
-        nq_obj = 0
-
     # Create mink configuration
     configuration = mink.Configuration(model)
     data = configuration.data
@@ -358,6 +351,10 @@ def main(
     for _ in range(wrist_init_steps):
         vel = mink.solve_ik(configuration, tasks_wrist, sim_dt, solver, damping=1e-5)
         configuration.integrate_inplace(vel, sim_dt)
+        if model.neq:
+            configuration.update(
+                project_joint_equalities(model, configuration.q.copy())
+            )
         set_object_qpos(0)
 
     # -- Phase 2: Add finger tips (frame 0) --
@@ -367,6 +364,10 @@ def main(
     for _ in range(finger_init_steps):
         vel = mink.solve_ik(configuration, tasks_all, sim_dt, solver, damping=1e-5)
         configuration.integrate_inplace(vel, sim_dt)
+        if model.neq:
+            configuration.update(
+                project_joint_equalities(model, configuration.q.copy())
+            )
         set_object_qpos(0)
 
     # -- Main IK loop --
@@ -396,6 +397,10 @@ def main(
                     configuration, tasks_all, sim_dt, solver, damping=1e-5
                 )
                 configuration.integrate_inplace(vel, sim_dt)
+                if model.neq:
+                    configuration.update(
+                        project_joint_equalities(model, configuration.q.copy())
+                    )
                 set_object_qpos(t)
 
             qpos_list.append(configuration.q.copy())
@@ -439,6 +444,8 @@ def main(
     for i in range(qpos_list.shape[1]):
         filtered[:, i] = moving_average_filter(qpos_list[:, i], average_frame_size)
     qpos_list = filtered
+    project_joint_equalities(model, qpos_list)
+    control_indices = actuator_qpos_indices(model)
 
     # -- Compute qvel via finite differences --
     n_filtered = qpos_list.shape[0]
@@ -456,14 +463,14 @@ def main(
     model.opt.timestep = ref_dt / n_rollout_substeps
     mj_data_rollout.qpos[:] = qpos_list[0]
     mj_data_rollout.qvel[:] = qvel_list[0]
-    mj_data_rollout.ctrl[:] = qpos_list[0][: model.nq - nq_obj]
+    mj_data_rollout.ctrl[:] = qpos_list[0][control_indices]
     for _ in range(n_rollout_substeps):
         mujoco.mj_step(model, mj_data_rollout)
     n_final = qpos_list.shape[0]
     qpos_rollout = np.zeros((n_final, model.nq))
     qpos_rollout[0] = qpos_list[0]
     for i in range(1, n_final):
-        mj_data_rollout.ctrl[:] = qpos_list[i][: model.nq - nq_obj]
+        mj_data_rollout.ctrl[:] = qpos_list[i][control_indices]
         noise = np.random.randn(model.nu) * 0.2
         noise[:6] *= 0.0
         noise[22:28] *= 0.0
@@ -482,7 +489,10 @@ def main(
         loguru.logger.info(f"Saved video to {video_path}")
 
     out_npz = f"{file_dir}/trajectory_kinematic.npz"
-    np.savez(out_npz, qpos=qpos_list, qvel=qvel_list, frequency=1 / ref_dt)
+    np.savez(
+        out_npz, qpos=qpos_list, qvel=qvel_list,
+        ctrl=qpos_list[:, control_indices], frequency=1 / ref_dt,
+    )
     loguru.logger.info(f"Saved {out_npz}")
 
     out_npz = f"{file_dir}/trajectory_ikrollout.npz"

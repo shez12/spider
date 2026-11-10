@@ -1,0 +1,6 @@
+{
+  "joints": 29,
+  "source_robot_body_count": 31,
+  "fingertip_fk_max_error_m": 4.267509956523696e-12,
+  "right_hand": true
+}

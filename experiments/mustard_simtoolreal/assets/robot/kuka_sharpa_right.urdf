@@ -1,0 +1,1473 @@
+<robot name="kuka_sharpa_right">
+  <link name="kuka_base">
+    <inertial>
+      <origin xyz="-0.0126116529418 -3.42800635896e-07 0.0703907642334" rpy="-3.14061349497 -1.49308045514 -0.000908677705668" />
+      <mass value="5.689794617143977" />
+      <inertia ixx="0.03493898406442788" iyy="0.03200333321998588" izz="0.025437215078505854" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_1">
+      <geometry>
+        <mesh filename="meshes/geom_001.obj" />
+      </geometry>
+      <material name="material_1">
+        <color rgba="0.40000000596 0.40000000596 0.40000000596 1" />
+      </material>
+    </visual>
+    <collision name="collision_1">
+      <geometry>
+        <mesh filename="meshes/geom_001.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="iiwa14_link_1">
+    <inertial>
+      <origin xyz="0 -0.03 0.12" rpy="0 0 1.57079632679" />
+      <mass value="5.76" />
+      <inertia ixx="0.0333" iyy="0.033" izz="0.0123" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_2">
+      <geometry>
+        <mesh filename="meshes/geom_002.obj" />
+      </geometry>
+      <material name="material_2">
+        <color rgba="1 0.423500001431 0.0392000004649 1" />
+      </material>
+    </visual>
+    <collision name="collision_2">
+      <geometry>
+        <mesh filename="meshes/geom_002.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="iiwa14_joint_1" type="revolute">
+    <parent link="kuka_base" />
+    <child link="iiwa14_link_1" />
+    <origin xyz="0 0 0.1575" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.96706" upper="2.96706" effort="300.0" velocity="10" />
+    <dynamics damping="0.5" friction="0.0" />
+  </joint>
+  <link name="iiwa14_link_2">
+    <inertial>
+      <origin xyz="0.0003 0.059 0.042" rpy="1.57079632679 0 0" />
+      <mass value="6.35" />
+      <inertia ixx="0.0305" iyy="0.0304" izz="0.011" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_3">
+      <geometry>
+        <mesh filename="meshes/geom_003.obj" />
+      </geometry>
+      <material name="material_3">
+        <color rgba="1 0.423500001431 0.0392000004649 1" />
+      </material>
+    </visual>
+    <collision name="collision_3">
+      <geometry>
+        <mesh filename="meshes/geom_003.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="iiwa14_joint_2" type="revolute">
+    <parent link="iiwa14_link_1" />
+    <child link="iiwa14_link_2" />
+    <origin xyz="0 0 0.2025" rpy="1.57079632679 0 3.14159265359" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.0944" upper="2.0944" effort="300.0" velocity="10" />
+    <dynamics damping="0.5" friction="0.0" />
+  </joint>
+  <link name="iiwa14_link_3">
+    <inertial>
+      <origin xyz="0 0.03 0.13" rpy="0 0 0" />
+      <mass value="3.5" />
+      <inertia ixx="0.025" iyy="0.0238" izz="0.0076" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_4">
+      <geometry>
+        <mesh filename="meshes/geom_004.obj" />
+      </geometry>
+      <material name="material_4">
+        <color rgba="1 0.423500001431 0.0392000004649 1" />
+      </material>
+    </visual>
+    <collision name="collision_4">
+      <geometry>
+        <mesh filename="meshes/geom_004.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="iiwa14_joint_3" type="revolute">
+    <parent link="iiwa14_link_2" />
+    <child link="iiwa14_link_3" />
+    <origin xyz="0 0.2045 0" rpy="1.57079632679 0 3.14159265359" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.96706" upper="2.96706" effort="300.0" velocity="10" />
+    <dynamics damping="0.5" friction="0.0" />
+  </joint>
+  <link name="iiwa14_link_4">
+    <inertial>
+      <origin xyz="0 0.067 0.034" rpy="1.57079632679 0 0" />
+      <mass value="3.5" />
+      <inertia ixx="0.017" iyy="0.0164" izz="0.006" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_5">
+      <geometry>
+        <mesh filename="meshes/geom_005.obj" />
+      </geometry>
+      <material name="material_5">
+        <color rgba="1 0.423500001431 0.0392000004649 1" />
+      </material>
+    </visual>
+    <collision name="collision_5">
+      <geometry>
+        <mesh filename="meshes/geom_005.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="iiwa14_joint_4" type="revolute">
+    <parent link="iiwa14_link_3" />
+    <child link="iiwa14_link_4" />
+    <origin xyz="0 0 0.2155" rpy="1.57079632679 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.0944" upper="2.0944" effort="300.0" velocity="10" />
+    <dynamics damping="0.5" friction="0.0" />
+  </joint>
+  <link name="iiwa14_link_5">
+    <inertial>
+      <origin xyz="0.0001 0.021 0.076" rpy="0 0 0" />
+      <mass value="3.5" />
+      <inertia ixx="0.01" iyy="0.0087" izz="0.00449" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_6">
+      <geometry>
+        <mesh filename="meshes/geom_006.obj" />
+      </geometry>
+      <material name="material_6">
+        <color rgba="1 0.423500001431 0.0392000004649 1" />
+      </material>
+    </visual>
+    <collision name="collision_6">
+      <geometry>
+        <mesh filename="meshes/geom_006.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="iiwa14_joint_5" type="revolute">
+    <parent link="iiwa14_link_4" />
+    <child link="iiwa14_link_5" />
+    <origin xyz="0 0.1845 0" rpy="1.57079632679 0 3.14159265359" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.96706" upper="2.96706" effort="300.0" velocity="10" />
+    <dynamics damping="0.5" friction="0.0" />
+  </joint>
+  <link name="iiwa14_link_6">
+    <inertial>
+      <origin xyz="0 0.0006 0.0004" rpy="0 0 0" />
+      <mass value="1.8" />
+      <inertia ixx="0.0049" iyy="0.0047" izz="0.0036" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_7">
+      <geometry>
+        <mesh filename="meshes/geom_007.obj" />
+      </geometry>
+      <material name="material_7">
+        <color rgba="1 0.423500001431 0.0392000004649 1" />
+      </material>
+    </visual>
+    <collision name="collision_7">
+      <geometry>
+        <mesh filename="meshes/geom_007.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="iiwa14_joint_6" type="revolute">
+    <parent link="iiwa14_link_5" />
+    <child link="iiwa14_link_6" />
+    <origin xyz="0 0 0.2155" rpy="1.57079632679 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.0944" upper="2.0944" effort="300.0" velocity="10" />
+    <dynamics damping="0.5" friction="0.0" />
+  </joint>
+  <link name="iiwa14_link_7">
+    <inertial>
+      <origin xyz="0 0 0.02" rpy="0 0 0" />
+      <mass value="1.2" />
+      <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_8">
+      <geometry>
+        <mesh filename="meshes/geom_008.obj" />
+      </geometry>
+      <material name="material_8">
+        <color rgba="0.40000000596 0.40000000596 0.40000000596 1" />
+      </material>
+    </visual>
+    <collision name="collision_8">
+      <geometry>
+        <mesh filename="meshes/geom_008.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="iiwa14_joint_7" type="revolute">
+    <parent link="iiwa14_link_6" />
+    <child link="iiwa14_link_7" />
+    <origin xyz="0 0.081 0" rpy="1.57079632679 0 3.14159265359" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.05433" upper="3.05433" effort="300.0" velocity="10" />
+    <dynamics damping="0.5" friction="0.0" />
+  </joint>
+  <link name="right_hand_C_MC">
+    <inertial>
+      <origin xyz="-0.00216 0.00536 0.04011" rpy="-0.0110538672589 -0.200854771323 -1.59917610184" />
+      <mass value="0.6506" />
+      <inertia ixx="0.000814964" iyy="0.000674248" izz="0.00027314" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_9">
+      <geometry>
+        <mesh filename="meshes/geom_009.obj" />
+      </geometry>
+      <material name="material_9">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_10">
+      <geometry>
+        <mesh filename="meshes/geom_010.obj" />
+      </geometry>
+      <material name="material_10">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_10">
+      <geometry>
+        <mesh filename="meshes/geom_010.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_11">
+      <geometry>
+        <mesh filename="meshes/geom_011.obj" />
+      </geometry>
+      <material name="material_11">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_11">
+      <geometry>
+        <mesh filename="meshes/geom_011.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_12">
+      <geometry>
+        <mesh filename="meshes/geom_012.obj" />
+      </geometry>
+      <material name="material_12">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_12">
+      <geometry>
+        <mesh filename="meshes/geom_012.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_13">
+      <geometry>
+        <mesh filename="meshes/geom_013.obj" />
+      </geometry>
+      <material name="material_13">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_13">
+      <geometry>
+        <mesh filename="meshes/geom_013.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_14">
+      <geometry>
+        <mesh filename="meshes/geom_014.obj" />
+      </geometry>
+      <material name="material_14">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_14">
+      <geometry>
+        <mesh filename="meshes/geom_014.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_15">
+      <geometry>
+        <mesh filename="meshes/geom_015.obj" />
+      </geometry>
+      <material name="material_15">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_15">
+      <geometry>
+        <mesh filename="meshes/geom_015.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_16">
+      <geometry>
+        <mesh filename="meshes/geom_016.obj" />
+      </geometry>
+      <material name="material_16">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_16">
+      <geometry>
+        <mesh filename="meshes/geom_016.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_17">
+      <geometry>
+        <mesh filename="meshes/geom_017.obj" />
+      </geometry>
+      <material name="material_17">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_17">
+      <geometry>
+        <mesh filename="meshes/geom_017.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_18">
+      <geometry>
+        <mesh filename="meshes/geom_018.obj" />
+      </geometry>
+      <material name="material_18">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_18">
+      <geometry>
+        <mesh filename="meshes/geom_018.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_19">
+      <geometry>
+        <mesh filename="meshes/geom_019.obj" />
+      </geometry>
+      <material name="material_19">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_19">
+      <geometry>
+        <mesh filename="meshes/geom_019.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_20">
+      <geometry>
+        <mesh filename="meshes/geom_020.obj" />
+      </geometry>
+      <material name="material_20">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_20">
+      <geometry>
+        <mesh filename="meshes/geom_020.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_21">
+      <geometry>
+        <mesh filename="meshes/geom_021.obj" />
+      </geometry>
+      <material name="material_21">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_21">
+      <geometry>
+        <mesh filename="meshes/geom_021.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_22">
+      <geometry>
+        <mesh filename="meshes/geom_022.obj" />
+      </geometry>
+      <material name="material_22">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_22">
+      <geometry>
+        <mesh filename="meshes/geom_022.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_23">
+      <geometry>
+        <mesh filename="meshes/geom_023.obj" />
+      </geometry>
+      <material name="material_23">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_23">
+      <geometry>
+        <mesh filename="meshes/geom_023.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_24">
+      <geometry>
+        <mesh filename="meshes/geom_024.obj" />
+      </geometry>
+      <material name="material_24">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_24">
+      <geometry>
+        <mesh filename="meshes/geom_024.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_25">
+      <geometry>
+        <mesh filename="meshes/geom_025.obj" />
+      </geometry>
+      <material name="material_25">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_25">
+      <geometry>
+        <mesh filename="meshes/geom_025.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_26">
+      <geometry>
+        <mesh filename="meshes/geom_026.obj" />
+      </geometry>
+      <material name="material_26">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_26">
+      <geometry>
+        <mesh filename="meshes/geom_026.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_27">
+      <geometry>
+        <mesh filename="meshes/geom_027.obj" />
+      </geometry>
+      <material name="material_27">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_27">
+      <geometry>
+        <mesh filename="meshes/geom_027.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_28">
+      <geometry>
+        <mesh filename="meshes/geom_028.obj" />
+      </geometry>
+      <material name="material_28">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_28">
+      <geometry>
+        <mesh filename="meshes/geom_028.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_29">
+      <geometry>
+        <mesh filename="meshes/geom_029.obj" />
+      </geometry>
+      <material name="material_29">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_29">
+      <geometry>
+        <mesh filename="meshes/geom_029.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_30">
+      <geometry>
+        <mesh filename="meshes/geom_030.obj" />
+      </geometry>
+      <material name="material_30">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_30">
+      <geometry>
+        <mesh filename="meshes/geom_030.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_31">
+      <geometry>
+        <mesh filename="meshes/geom_031.obj" />
+      </geometry>
+      <material name="material_31">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_31">
+      <geometry>
+        <mesh filename="meshes/geom_031.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_32">
+      <geometry>
+        <mesh filename="meshes/geom_032.obj" />
+      </geometry>
+      <material name="material_32">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_32">
+      <geometry>
+        <mesh filename="meshes/geom_032.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_33">
+      <geometry>
+        <mesh filename="meshes/geom_033.obj" />
+      </geometry>
+      <material name="material_33">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_33">
+      <geometry>
+        <mesh filename="meshes/geom_033.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_34">
+      <geometry>
+        <mesh filename="meshes/geom_034.obj" />
+      </geometry>
+      <material name="material_34">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_34">
+      <geometry>
+        <mesh filename="meshes/geom_034.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_35">
+      <geometry>
+        <mesh filename="meshes/geom_035.obj" />
+      </geometry>
+      <material name="material_35">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_35">
+      <geometry>
+        <mesh filename="meshes/geom_035.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_36">
+      <geometry>
+        <mesh filename="meshes/geom_036.obj" />
+      </geometry>
+      <material name="material_36">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_36">
+      <geometry>
+        <mesh filename="meshes/geom_036.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_37">
+      <geometry>
+        <mesh filename="meshes/geom_037.obj" />
+      </geometry>
+      <material name="material_37">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_37">
+      <geometry>
+        <mesh filename="meshes/geom_037.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_38">
+      <geometry>
+        <mesh filename="meshes/geom_038.obj" />
+      </geometry>
+      <material name="material_38">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_38">
+      <geometry>
+        <mesh filename="meshes/geom_038.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_39">
+      <geometry>
+        <mesh filename="meshes/geom_039.obj" />
+      </geometry>
+      <material name="material_39">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_39">
+      <geometry>
+        <mesh filename="meshes/geom_039.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_40">
+      <geometry>
+        <mesh filename="meshes/geom_040.obj" />
+      </geometry>
+      <material name="material_40">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_40">
+      <geometry>
+        <mesh filename="meshes/geom_040.obj" />
+      </geometry>
+    </collision>
+    <visual name="visual_41">
+      <geometry>
+        <mesh filename="meshes/geom_041.obj" />
+      </geometry>
+      <material name="material_41">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_41">
+      <geometry>
+        <mesh filename="meshes/geom_041.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="fixed_right_hand_C_MC" type="fixed">
+    <parent link="iiwa14_link_7" />
+    <child link="right_hand_C_MC" />
+    <origin xyz="0 0 0.095" rpy="0 0 -1.30900106353" />
+  </joint>
+  <link name="right_thumb_CMC_VL">
+    <inertial>
+      <origin xyz="-0.00065 0.0002 0" rpy="-1.32435319659 -1.57079632679 0" />
+      <mass value="0.0025" />
+      <inertia ixx="2.6e-07" iyy="2.12661e-07" izz="1.34339e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_42">
+      <geometry>
+        <mesh filename="meshes/geom_042.obj" />
+      </geometry>
+      <material name="material_42">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_43">
+      <geometry>
+        <mesh filename="meshes/geom_043.obj" />
+      </geometry>
+      <material name="material_43">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_43">
+      <geometry>
+        <mesh filename="meshes/geom_043.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_thumb_CMC_FE" type="revolute">
+    <parent link="right_hand_C_MC" />
+    <child link="right_thumb_CMC_VL" />
+    <origin xyz="0.01 0.026 0.0214" rpy="0 0 1.57080056944" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.1745" upper="1.9199" effort="1000000.0" velocity="10" />
+    <dynamics damping="4.2e-05" friction="0.132" />
+  </joint>
+  <link name="right_thumb_MC">
+    <inertial>
+      <origin xyz="0.03643 0.01024 -0.00517" rpy="-1.52539197931 -1.13458966167 -1.61156102724" />
+      <mass value="0.13587" />
+      <inertia ixx="4.69153e-05" iyy="4.29066e-05" izz="1.92101e-05" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_44">
+      <geometry>
+        <mesh filename="meshes/geom_044.obj" />
+      </geometry>
+      <material name="material_44">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_45">
+      <geometry>
+        <mesh filename="meshes/geom_045.obj" />
+      </geometry>
+      <material name="material_45">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_45">
+      <geometry>
+        <mesh filename="meshes/geom_045.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_thumb_CMC_AA" type="revolute">
+    <parent link="right_thumb_CMC_VL" />
+    <child link="right_thumb_MC" />
+    <origin xyz="0 0.005 0" rpy="-1.57079925695 -0.785399861301 -3.17022209373e-07" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1000000.0" velocity="10" />
+    <dynamics damping="4.2e-05" friction="0.132" />
+  </joint>
+  <link name="right_thumb_MCP_VL">
+    <inertial>
+      <origin xyz="-0.00205444491048 -0.000324066868971 1.89813979817e-05" rpy="1.55366467577 -1.57079632679 0" />
+      <mass value="8e-05" />
+      <inertia ixx="4.5910659338132e-09" iyy="4.0036799884022375e-09" izz="2.1168360518865027e-09" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_46">
+      <geometry>
+        <mesh filename="meshes/geom_046.obj" />
+      </geometry>
+      <material name="material_46">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+  </link>
+  <joint name="right_thumb_MCP_FE" type="revolute">
+    <parent link="right_thumb_MC" />
+    <child link="right_thumb_MCP_VL" />
+    <origin xyz="0.065 0.006 -0.010392" rpy="0.523600530398 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.5236" upper="1.3963" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_thumb_PP">
+    <inertial>
+      <origin xyz="0.021256 0.00095 0.00092" rpy="-1.57958863519 0.138878105694 -1.65468027355" />
+      <mass value="0.03078" />
+      <inertia ixx="6.08344e-06" iyy="5.91207e-06" izz="1.22148e-06" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_47">
+      <geometry>
+        <mesh filename="meshes/geom_047.obj" />
+      </geometry>
+      <material name="material_47">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_48">
+      <geometry>
+        <mesh filename="meshes/geom_048.obj" />
+      </geometry>
+      <material name="material_48">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_48">
+      <geometry>
+        <mesh filename="meshes/geom_048.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_thumb_MCP_AA" type="revolute">
+    <parent link="right_thumb_MCP_VL" />
+    <child link="right_thumb_PP" />
+    <origin xyz="0 0 0" rpy="-1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_thumb_DP">
+    <inertial>
+      <origin xyz="0.00823663 0.00178196 -0.00099988" rpy="1.71899603785 -0.919658163644 1.32024906383" />
+      <mass value="0.00998" />
+      <inertia ixx="1.09014e-06" iyy="1.041e-06" izz="2.95174e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_49">
+      <geometry>
+        <mesh filename="meshes/geom_049.obj" />
+      </geometry>
+      <material name="material_49">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_50">
+      <geometry>
+        <mesh filename="meshes/geom_050.obj" />
+      </geometry>
+      <material name="material_50">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_51">
+      <geometry>
+        <mesh filename="meshes/geom_051.obj" />
+      </geometry>
+      <material name="material_51">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_51">
+      <geometry>
+        <mesh filename="meshes/geom_051.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_thumb_IP" type="revolute">
+    <parent link="right_thumb_PP" />
+    <child link="right_thumb_DP" />
+    <origin xyz="0.039 0 0" rpy="1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.7453" effort="1000000.0" velocity="10" />
+    <dynamics damping="4.06e-06" friction="0.01276" />
+  </joint>
+  <link name="right_index_MCP_VL">
+    <inertial>
+      <origin xyz="-0.0092 0.0013 0" rpy="-1.65117800193 -1.57079632679 0" />
+      <mass value="0.00221" />
+      <inertia ixx="2.23e-07" iyy="1.77435e-07" izz="1.09965e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_52">
+      <geometry>
+        <mesh filename="meshes/geom_052.obj" />
+      </geometry>
+      <material name="material_52">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_53">
+      <geometry>
+        <mesh filename="meshes/geom_053.obj" />
+      </geometry>
+      <material name="material_53">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_53">
+      <geometry>
+        <mesh filename="meshes/geom_053.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_MCP_FE" type="revolute">
+    <parent link="right_hand_C_MC" />
+    <child link="right_index_MCP_VL" />
+    <origin xyz="0.001 0.0303 0.0959" rpy="-3.14159065358 -1.57079232679 -1.57079432681" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.174533" upper="1.5708" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_index_PP">
+    <inertial>
+      <origin xyz="0.027 0.00055 -0.00068" rpy="-1.55566366127 0.0314578936827 -1.60593850658" />
+      <mass value="0.04741" />
+      <inertia ixx="1.14061e-05" iyy="1.10467e-05" izz="2.15425e-06" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_54">
+      <geometry>
+        <mesh filename="meshes/geom_054.obj" />
+      </geometry>
+      <material name="material_54">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_55">
+      <geometry>
+        <mesh filename="meshes/geom_055.obj" />
+      </geometry>
+      <material name="material_55">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_55">
+      <geometry>
+        <mesh filename="meshes/geom_055.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_MCP_AA" type="revolute">
+    <parent link="right_index_MCP_VL" />
+    <child link="right_index_PP" />
+    <origin xyz="0 0 0" rpy="-1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_index_MP">
+    <inertial>
+      <origin xyz="0.01212 0.00116 0.00058" rpy="2.42260002978 -1.47229627811 0.70807079236" />
+      <mass value="0.01824" />
+      <inertia ixx="2.00683e-06" iyy="1.9229e-06" izz="5.68878e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_56">
+      <geometry>
+        <mesh filename="meshes/geom_056.obj" />
+      </geometry>
+      <material name="material_56">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_57">
+      <geometry>
+        <mesh filename="meshes/geom_057.obj" />
+      </geometry>
+      <material name="material_57">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_57">
+      <geometry>
+        <mesh filename="meshes/geom_057.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_PIP" type="revolute">
+    <parent link="right_index_PP" />
+    <child link="right_index_MP" />
+    <origin xyz="0.047 0 0" rpy="1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.7453" effort="1000000.0" velocity="10" />
+    <dynamics damping="4.06e-06" friction="0.01276" />
+  </joint>
+  <link name="right_index_DP">
+    <inertial>
+      <origin xyz="0.0124856 0.00257344 -0.000107634" rpy="1.79138355714 -1.41491358474 1.36329035598" />
+      <mass value="0.00465" />
+      <inertia ixx="3.15145e-07" iyy="3.09574e-07" izz="1.34852e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_58">
+      <geometry>
+        <mesh filename="meshes/geom_058.obj" />
+      </geometry>
+      <material name="material_58">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_59">
+      <geometry>
+        <mesh filename="meshes/geom_059.obj" />
+      </geometry>
+      <material name="material_59">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_60">
+      <geometry>
+        <mesh filename="meshes/geom_060.obj" />
+      </geometry>
+      <material name="material_60">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_60">
+      <geometry>
+        <mesh filename="meshes/geom_060.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_index_DIP" type="revolute">
+    <parent link="right_index_MP" />
+    <child link="right_index_DP" />
+    <origin xyz="0.0315 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.3963" effort="1000000.0" velocity="10" />
+    <dynamics damping="1.21e-06" friction="0.00378738" />
+  </joint>
+  <link name="right_middle_MCP_VL">
+    <inertial>
+      <origin xyz="-0.0092 0.0013 0" rpy="-1.65117800193 -1.57079632679 0" />
+      <mass value="0.00221" />
+      <inertia ixx="2.23e-07" iyy="1.77435e-07" izz="1.09965e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_61">
+      <geometry>
+        <mesh filename="meshes/geom_061.obj" />
+      </geometry>
+      <material name="material_61">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_62">
+      <geometry>
+        <mesh filename="meshes/geom_062.obj" />
+      </geometry>
+      <material name="material_62">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_62">
+      <geometry>
+        <mesh filename="meshes/geom_062.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_MCP_FE" type="revolute">
+    <parent link="right_hand_C_MC" />
+    <child link="right_middle_MCP_VL" />
+    <origin xyz="0 0.01 0.0989" rpy="-3.14159065358 -1.57079232679 -1.57079432681" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.174533" upper="1.5708" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_middle_PP">
+    <inertial>
+      <origin xyz="0.027 0.00055 -0.00068" rpy="-1.55566366127 0.0314578936827 -1.60593850658" />
+      <mass value="0.04741" />
+      <inertia ixx="1.14061e-05" iyy="1.10467e-05" izz="2.15425e-06" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_63">
+      <geometry>
+        <mesh filename="meshes/geom_063.obj" />
+      </geometry>
+      <material name="material_63">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_64">
+      <geometry>
+        <mesh filename="meshes/geom_064.obj" />
+      </geometry>
+      <material name="material_64">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_64">
+      <geometry>
+        <mesh filename="meshes/geom_064.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_MCP_AA" type="revolute">
+    <parent link="right_middle_MCP_VL" />
+    <child link="right_middle_PP" />
+    <origin xyz="0 0 0" rpy="-1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_middle_MP">
+    <inertial>
+      <origin xyz="0.01212 0.00116 0.00058" rpy="2.42260002978 -1.47229627811 0.70807079236" />
+      <mass value="0.01824" />
+      <inertia ixx="2.00683e-06" iyy="1.9229e-06" izz="5.68878e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_65">
+      <geometry>
+        <mesh filename="meshes/geom_065.obj" />
+      </geometry>
+      <material name="material_65">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_66">
+      <geometry>
+        <mesh filename="meshes/geom_066.obj" />
+      </geometry>
+      <material name="material_66">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_66">
+      <geometry>
+        <mesh filename="meshes/geom_066.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_PIP" type="revolute">
+    <parent link="right_middle_PP" />
+    <child link="right_middle_MP" />
+    <origin xyz="0.047 0 0" rpy="1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.7453" effort="1000000.0" velocity="10" />
+    <dynamics damping="4.06e-06" friction="0.01276" />
+  </joint>
+  <link name="right_middle_DP">
+    <inertial>
+      <origin xyz="0.0124856 0.00257344 -0.000107634" rpy="1.79138355714 -1.41491358474 1.36329035598" />
+      <mass value="0.00465" />
+      <inertia ixx="3.15145e-07" iyy="3.09574e-07" izz="1.34852e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_67">
+      <geometry>
+        <mesh filename="meshes/geom_067.obj" />
+      </geometry>
+      <material name="material_67">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_68">
+      <geometry>
+        <mesh filename="meshes/geom_068.obj" />
+      </geometry>
+      <material name="material_68">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_69">
+      <geometry>
+        <mesh filename="meshes/geom_069.obj" />
+      </geometry>
+      <material name="material_69">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_69">
+      <geometry>
+        <mesh filename="meshes/geom_069.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_middle_DIP" type="revolute">
+    <parent link="right_middle_MP" />
+    <child link="right_middle_DP" />
+    <origin xyz="0.0315 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.3963" effort="1000000.0" velocity="10" />
+    <dynamics damping="1.21e-06" friction="0.00378738" />
+  </joint>
+  <link name="right_ring_MCP_VL">
+    <inertial>
+      <origin xyz="-0.0092 0.0013 0" rpy="-1.65117800193 -1.57079632679 0" />
+      <mass value="0.00221" />
+      <inertia ixx="2.23e-07" iyy="1.77435e-07" izz="1.09965e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_70">
+      <geometry>
+        <mesh filename="meshes/geom_070.obj" />
+      </geometry>
+      <material name="material_70">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_71">
+      <geometry>
+        <mesh filename="meshes/geom_071.obj" />
+      </geometry>
+      <material name="material_71">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_71">
+      <geometry>
+        <mesh filename="meshes/geom_071.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_MCP_FE" type="revolute">
+    <parent link="right_hand_C_MC" />
+    <child link="right_ring_MCP_VL" />
+    <origin xyz="0.0015 -0.0103 0.0929" rpy="-3.14159065358 -1.57079232679 -1.57079432681" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.174533" upper="1.5708" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_ring_PP">
+    <inertial>
+      <origin xyz="0.027 0.00055 -0.00068" rpy="-1.55566366127 0.0314578936827 -1.60593850658" />
+      <mass value="0.04741" />
+      <inertia ixx="1.14061e-05" iyy="1.10467e-05" izz="2.15425e-06" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_72">
+      <geometry>
+        <mesh filename="meshes/geom_072.obj" />
+      </geometry>
+      <material name="material_72">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_73">
+      <geometry>
+        <mesh filename="meshes/geom_073.obj" />
+      </geometry>
+      <material name="material_73">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_73">
+      <geometry>
+        <mesh filename="meshes/geom_073.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_MCP_AA" type="revolute">
+    <parent link="right_ring_MCP_VL" />
+    <child link="right_ring_PP" />
+    <origin xyz="0 0 0" rpy="-1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_ring_MP">
+    <inertial>
+      <origin xyz="0.01212 0.00116 0.00058" rpy="2.42260002978 -1.47229627811 0.70807079236" />
+      <mass value="0.01824" />
+      <inertia ixx="2.00683e-06" iyy="1.9229e-06" izz="5.68878e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_74">
+      <geometry>
+        <mesh filename="meshes/geom_074.obj" />
+      </geometry>
+      <material name="material_74">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_75">
+      <geometry>
+        <mesh filename="meshes/geom_075.obj" />
+      </geometry>
+      <material name="material_75">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_75">
+      <geometry>
+        <mesh filename="meshes/geom_075.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_PIP" type="revolute">
+    <parent link="right_ring_PP" />
+    <child link="right_ring_MP" />
+    <origin xyz="0.047 0 0" rpy="1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.7453" effort="1000000.0" velocity="10" />
+    <dynamics damping="4.06e-06" friction="0.01276" />
+  </joint>
+  <link name="right_ring_DP">
+    <inertial>
+      <origin xyz="0.0124856 0.00257344 -0.000107634" rpy="1.79138355714 -1.41491358474 1.36329035598" />
+      <mass value="0.00465" />
+      <inertia ixx="3.15145e-07" iyy="3.09574e-07" izz="1.34852e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_76">
+      <geometry>
+        <mesh filename="meshes/geom_076.obj" />
+      </geometry>
+      <material name="material_76">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_77">
+      <geometry>
+        <mesh filename="meshes/geom_077.obj" />
+      </geometry>
+      <material name="material_77">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_78">
+      <geometry>
+        <mesh filename="meshes/geom_078.obj" />
+      </geometry>
+      <material name="material_78">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_78">
+      <geometry>
+        <mesh filename="meshes/geom_078.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_ring_DIP" type="revolute">
+    <parent link="right_ring_MP" />
+    <child link="right_ring_DP" />
+    <origin xyz="0.0315 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.3963" effort="1000000.0" velocity="10" />
+    <dynamics damping="1.21e-06" friction="0.00378738" />
+  </joint>
+  <link name="right_pinky_MC">
+    <inertial>
+      <origin xyz="0.0107985 -0.00598801 -0.0335125" rpy="-0.039101645293 0.0367311570818 -1.57122177586" />
+      <mass value="0.12541" />
+      <inertia ixx="4.47765e-05" iyy="3.72569e-05" izz="1.69876e-05" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_79">
+      <geometry>
+        <mesh filename="meshes/geom_079.obj" />
+      </geometry>
+      <material name="material_79">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_80">
+      <geometry>
+        <mesh filename="meshes/geom_080.obj" />
+      </geometry>
+      <material name="material_80">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_80">
+      <geometry>
+        <mesh filename="meshes/geom_080.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_CMC" type="revolute">
+    <parent link="right_hand_C_MC" />
+    <child link="right_pinky_MC" />
+    <origin xyz="0.01136 -0.0263 0.0869" rpy="-3.14158530717 0 3.14158530717" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="0.2618" effort="1000000.0" velocity="10" />
+    <dynamics damping="4.2e-05" friction="0.012" />
+  </joint>
+  <link name="right_pinky_MCP_VL">
+    <inertial>
+      <origin xyz="-0.0092 0.0013 0" rpy="-1.65117800193 -1.57079632679 0" />
+      <mass value="0.00221" />
+      <inertia ixx="2.23e-07" iyy="1.77435e-07" izz="1.09965e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_81">
+      <geometry>
+        <mesh filename="meshes/geom_081.obj" />
+      </geometry>
+      <material name="material_81">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_82">
+      <geometry>
+        <mesh filename="meshes/geom_082.obj" />
+      </geometry>
+      <material name="material_82">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_82">
+      <geometry>
+        <mesh filename="meshes/geom_082.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_MCP_FE" type="revolute">
+    <parent link="right_pinky_MC" />
+    <child link="right_pinky_MCP_VL" />
+    <origin xyz="0.00836 -0.0048 0" rpy="-1.57079432684 1.57079232679 3.14159065355" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.174533" upper="1.5708" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_pinky_PP">
+    <inertial>
+      <origin xyz="0.027 0.00055 -0.00068" rpy="-1.55566366127 0.0314578936827 -1.60593850658" />
+      <mass value="0.04741" />
+      <inertia ixx="1.14061e-05" iyy="1.10467e-05" izz="2.15425e-06" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_83">
+      <geometry>
+        <mesh filename="meshes/geom_083.obj" />
+      </geometry>
+      <material name="material_83">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_84">
+      <geometry>
+        <mesh filename="meshes/geom_084.obj" />
+      </geometry>
+      <material name="material_84">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_84">
+      <geometry>
+        <mesh filename="meshes/geom_084.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_MCP_AA" type="revolute">
+    <parent link="right_pinky_MCP_VL" />
+    <child link="right_pinky_PP" />
+    <origin xyz="0 0 0" rpy="-1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="-0.3491" upper="0.3491" effort="1000000.0" velocity="10" />
+    <dynamics damping="2.38e-05" friction="0.07456" />
+  </joint>
+  <link name="right_pinky_MP">
+    <inertial>
+      <origin xyz="0.01212 0.00116 0.00058" rpy="2.42260002978 -1.47229627811 0.70807079236" />
+      <mass value="0.01824" />
+      <inertia ixx="2.00683e-06" iyy="1.9229e-06" izz="5.68878e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_85">
+      <geometry>
+        <mesh filename="meshes/geom_085.obj" />
+      </geometry>
+      <material name="material_85">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_86">
+      <geometry>
+        <mesh filename="meshes/geom_086.obj" />
+      </geometry>
+      <material name="material_86">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.34999999404" />
+      </material>
+    </visual>
+    <collision name="collision_86">
+      <geometry>
+        <mesh filename="meshes/geom_086.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_PIP" type="revolute">
+    <parent link="right_pinky_PP" />
+    <child link="right_pinky_MP" />
+    <origin xyz="0.047 0 0" rpy="1.57080056944 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.7453" effort="1000000.0" velocity="10" />
+    <dynamics damping="4.06e-06" friction="0.01276" />
+  </joint>
+  <link name="right_pinky_DP">
+    <inertial>
+      <origin xyz="0.0124856 0.00257344 -0.000107634" rpy="1.79138355714 -1.41491358474 1.36329035598" />
+      <mass value="0.00465" />
+      <inertia ixx="3.15145e-07" iyy="3.09574e-07" izz="1.34852e-07" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+    <visual name="visual_87">
+      <geometry>
+        <mesh filename="meshes/geom_087.obj" />
+      </geometry>
+      <material name="material_87">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_88">
+      <geometry>
+        <mesh filename="meshes/geom_088.obj" />
+      </geometry>
+      <material name="material_88">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <visual name="visual_89">
+      <geometry>
+        <mesh filename="meshes/geom_089.obj" />
+      </geometry>
+      <material name="material_89">
+        <color rgba="0.20000000298 0.600000023842 0.20000000298 0.25" />
+      </material>
+    </visual>
+    <collision name="collision_89">
+      <geometry>
+        <mesh filename="meshes/geom_089.obj" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="right_pinky_DIP" type="revolute">
+    <parent link="right_pinky_MP" />
+    <child link="right_pinky_DP" />
+    <origin xyz="0.0315 0 0" rpy="0 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit lower="0.0" upper="1.3963" effort="1000000.0" velocity="10" />
+    <dynamics damping="1.21e-06" friction="0.00378738" />
+  </joint>
+</robot>

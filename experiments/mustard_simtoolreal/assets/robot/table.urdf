@@ -1,0 +1,20 @@
+<robot name="table">
+  <link name="object_root">
+    <visual>
+      <origin xyz="0 0 -0.15" rpy="0 0 0" />
+      <geometry>
+        <box size="0.475 0.4 0.3" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.15" rpy="0 0 0" />
+      <geometry>
+        <box size="0.475 0.4 0.3" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1" />
+      <inertia ixx=".01" iyy=".01" izz=".01" ixy="0" ixz="0" iyz="0" />
+    </inertial>
+  </link>
+</robot>

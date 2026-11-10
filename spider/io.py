@@ -59,6 +59,13 @@ def load_data(
         )
         if config.embodiment_type in ["bimanual", "right", "left"]:
             ctrl_ref = qpos_ref[:, : -config.nq_obj]
+            if ctrl_ref.shape[1] != config.nu:
+                import mujoco
+
+                from spider.robot_model import actuator_qpos_indices
+
+                model = mujoco.MjModel.from_xml_path(config.model_path)
+                ctrl_ref = qpos_ref[:, actuator_qpos_indices(model)]
         elif config.embodiment_type in ["CMU", "DanceDB"]:
             ctrl_ref = qpos_ref[:, 7:]
         else:

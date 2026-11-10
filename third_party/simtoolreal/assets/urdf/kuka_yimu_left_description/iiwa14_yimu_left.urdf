@@ -1,0 +1,915 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="kuka_yimu_left">
+  
+  
+  <material name="Black">
+    <color rgba="0.0 0.0 0.0 1.0" />
+  </material>
+  <material name="Blue">
+    <color rgba="0.0 0.0 0.8 1.0" />
+  </material>
+  <material name="Green">
+    <color rgba="0.0 0.8 0.0 1.0" />
+  </material>
+  <material name="Grey">
+    <color rgba="0.4 0.4 0.4 1.0" />
+  </material>
+  <material name="Orange">
+    <color rgba="1.0 0.4235 0.0392 1.0" />
+  </material>
+  <material name="Brown">
+    <color rgba="0.8706 0.8118 0.7647 1.0" />
+  </material>
+  <material name="Red">
+    <color rgba="0.8 0.0 0.0 1.0" />
+  </material>
+  <material name="White">
+    <color rgba="1.0 1.0 1.0 1.0" />
+  </material>
+  
+  
+  <link name="iiwa14_link_0">
+    <inertial>
+      <origin xyz="-0.1 0 0.07" rpy="0 0 0" />
+      <mass value="5" />
+      <inertia ixx="0.05" ixy="0" ixz="0" iyy="0.06" iyz="0" izz="0.03" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/visual/link_0.stl" />
+      </geometry>
+      <material name="Grey" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/collision/link_0.stl" />
+      </geometry>
+      <material name="Grey" />
+    </collision>
+    <self_collision_checking>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <capsule radius="0.15" length="0.25" />
+      </geometry>
+    </self_collision_checking>
+  </link>
+  
+  <joint name="iiwa14_joint_1" type="revolute">
+    <parent link="iiwa14_link_0" />
+    <child link="iiwa14_link_1" />
+    <origin xyz="0 0 0.1575" rpy="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.96705972839" upper="2.96705972839" effort="300" velocity="10" />
+    <safety_controller soft_lower_limit="-2.93215314335" soft_upper_limit="2.93215314335" k_position="100" k_velocity="2" />
+    <dynamics damping="0.5" />
+  </joint>
+  <link name="iiwa14_link_1">
+    <inertial>
+      <origin xyz="0 -0.03 0.12" rpy="0 0 0" />
+      <mass value="5.76" />
+      <inertia ixx="0.0330" ixy="0" ixz="0" iyy="0.0333" iyz="0" izz="0.0123" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/visual/link_1.stl" />
+      </geometry>
+      <material name="Orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/collision/link_1.stl" />
+      </geometry>
+      <material name="Orange" />
+    </collision>
+  </link>
+  
+  <joint name="iiwa14_joint_2" type="revolute">
+    <parent link="iiwa14_link_1" />
+    <child link="iiwa14_link_2" />
+    <origin xyz="0 0 0.2025" rpy="1.57079632679   0 3.14159265359" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.09439510239" upper="2.09439510239" effort="300" velocity="10" />
+    <safety_controller soft_lower_limit="-2.05948851735" soft_upper_limit="2.05948851735" k_position="100" k_velocity="2" />
+    <dynamics damping="0.5" />
+  </joint>
+  <link name="iiwa14_link_2">
+    <inertial>
+      <origin xyz="0.0003 0.059 0.042" rpy="0 0 0" />
+      <mass value="6.35" />
+      <inertia ixx="0.0305" ixy="0" ixz="0" iyy="0.0110" iyz="0" izz="0.0304" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/visual/link_2.stl" />
+      </geometry>
+      <material name="Orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/collision/link_2.stl" />
+      </geometry>
+      <material name="Orange" />
+    </collision>
+  </link>
+  
+  <joint name="iiwa14_joint_3" type="revolute">
+    <parent link="iiwa14_link_2" />
+    <child link="iiwa14_link_3" />
+    <origin xyz="0 0.2045 0" rpy="1.57079632679 0 3.14159265359" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.96705972839" upper="2.96705972839" effort="300" velocity="10" />
+    <safety_controller soft_lower_limit="-2.93215314335" soft_upper_limit="2.93215314335" k_position="100" k_velocity="2" />
+    <dynamics damping="0.5" />
+  </joint>
+  <link name="iiwa14_link_3">
+    <inertial>
+      <origin xyz="0 0.03 0.13" rpy="0 0 0" />
+      <mass value="3.50" />
+      <inertia ixx="0.0250" ixy="0" ixz="0" iyy="0.0238" iyz="0" izz="0.0076" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/visual/link_3.stl" />
+      </geometry>
+      <material name="Orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/collision/link_3.stl" />
+      </geometry>
+      <material name="Orange" />
+    </collision>
+  </link>
+  
+  <joint name="iiwa14_joint_4" type="revolute">
+    <parent link="iiwa14_link_3" />
+    <child link="iiwa14_link_4" />
+    <origin xyz="0 0 0.2155" rpy="1.57079632679 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.09439510239" upper="2.09439510239" effort="300" velocity="10" />
+    <safety_controller soft_lower_limit="-2.05948851735" soft_upper_limit="2.05948851735" k_position="100" k_velocity="2" />
+    <dynamics damping="0.5" />
+  </joint>
+  <link name="iiwa14_link_4">
+    <inertial>
+      <origin xyz="0 0.067 0.034" rpy="0 0 0" />
+      <mass value="3.50" />
+      <inertia ixx="0.0170" ixy="0" ixz="0" iyy="0.0060" iyz="0" izz="0.0164" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/visual/link_4.stl" />
+      </geometry>
+      <material name="Orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/collision/link_4.stl" />
+      </geometry>
+      <material name="Orange" />
+    </collision>
+  </link>
+  
+  <joint name="iiwa14_joint_5" type="revolute">
+    <parent link="iiwa14_link_4" />
+    <child link="iiwa14_link_5" />
+    <origin xyz="0 0.1845 0" rpy="-1.57079632679 3.14159265359 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.96705972839" upper="2.96705972839" effort="300" velocity="10" />
+    <safety_controller soft_lower_limit="-2.93215314335" soft_upper_limit="2.93215314335" k_position="100" k_velocity="2" />
+    <dynamics damping="0.5" />
+  </joint>
+  <link name="iiwa14_link_5">
+    <inertial>
+      <origin xyz="0.0001 0.021 0.076" rpy="0 0 0" />
+      <mass value="3.50" />
+      <inertia ixx="0.0100" ixy="0" ixz="0" iyy="0.0087" iyz="0" izz="0.00449" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/visual/link_5.stl" />
+      </geometry>
+      <material name="Orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/collision/link_5.stl" />
+      </geometry>
+      <material name="Orange" />
+    </collision>
+  </link>
+  
+  <joint name="iiwa14_joint_6" type="revolute">
+    <parent link="iiwa14_link_5" />
+    <child link="iiwa14_link_6" />
+    <origin xyz="0 0 0.2155" rpy="1.57079632679 0 0" />
+    <axis xyz="0 0 1" />
+    <limit lower="-2.09439510239" upper="2.09439510239" effort="300" velocity="10" />
+    <safety_controller soft_lower_limit="-2.05948851735" soft_upper_limit="2.05948851735" k_position="100" k_velocity="2" />
+    <dynamics damping="0.5" />
+  </joint>
+  <link name="iiwa14_link_6">
+    <inertial>
+      <origin xyz="0 0.0006 0.0004" rpy="0 0 0" />
+      <mass value="1.80" />
+      <inertia ixx="0.0049" ixy="0" ixz="0" iyy="0.0047" iyz="0" izz="0.0036" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/visual/link_6.stl" />
+      </geometry>
+      <material name="Orange" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/collision/link_6.stl" />
+      </geometry>
+      <material name="Orange" />
+    </collision>
+  </link>
+  
+  <joint name="iiwa14_joint_7" type="revolute">
+    <parent link="iiwa14_link_6" />
+    <child link="iiwa14_link_7" />
+    <origin xyz="0 0.081 0" rpy="-1.57079632679 3.14159265359 0" />
+    
+    <axis xyz="0 0 1" />
+    <limit lower="-3.05432619099" upper="3.05432619099" effort="300" velocity="10" />
+    <safety_controller soft_lower_limit="-3.01941960595" soft_upper_limit="3.01941960595" k_position="100" k_velocity="2" />
+    <dynamics damping="0.5" />
+  </joint>
+  <link name="iiwa14_link_7">
+    <inertial>
+      <origin xyz="0 0 0.02" rpy="0 0 0" />
+      <mass value="1.20" />
+      <inertia ixx="0.0010" ixy="0" ixz="0" iyy="0.0010" iyz="0" izz="0.0010" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/visual/link_7.stl" />
+      </geometry>
+      <material name="Grey" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="new_iiwa14_meshes/collision/link_7.stl" />
+      </geometry>
+      <material name="Grey" />
+    </collision>
+  </link>
+  <joint name="iiwa14_joint_ee" type="fixed">
+    <parent link="iiwa14_link_7" />
+    <child link="iiwa14_link_ee" />
+    <origin xyz="0 0 0.045" rpy="0 0 0" />
+  </joint>
+  <link name="iiwa14_link_ee">
+  </link>
+  
+  <link name="yimu_base_link">
+    <inertial>
+      <origin xyz="-0.0196259808957079 -0.0180015293981672 -0.0351425526261591" rpy="0 0 0" />
+      <mass value="0.0778420616834167" />
+      <inertia ixx="5.41552112912885E-05" ixy="1.32383162512796E-07" ixz="1.67111730243607E-06" iyy="8.16044400006999E-05" iyz="-1.04678982937254E-06" izz="3.54978356379982E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/base_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link name="yimu_1-1">
+    <inertial>
+      <origin xyz="0.000482753652689946 0.0282425054354202 0.000235568784494794" rpy="0 0 0" />
+      <mass value="0.00609938761427916" />
+      <inertia ixx="9.41227732325078E-07" ixy="-3.29293222272903E-08" ixz="7.78811118080445E-09" iyy="2.16113680419324E-07" iyz="-1.887656085115E-08" izz="9.33571908090392E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-1.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_1-1" type="revolute">
+    <origin xyz="-0.0107560371784817 -0.0106577000000698 -0.0814653290677027" rpy="1.57079632679463 1.04719755119648 3.14159265358949" />
+    <parent link="yimu_base_link" />
+    <child link="yimu_1-1" />
+    <axis xyz="0 1 0" />
+    <limit lower="-1.0472" upper="0.5236" effort="3.3" velocity="11.84076833" />
+  </joint>
+  <link name="yimu_1-2">
+    <inertial>
+      <origin xyz="-0.00540283571427803 -0.00552119943716468 -0.00811723386796" rpy="0 0 0" />
+      <mass value="0.00258354892744464" />
+      <inertia ixx="1.19402745347927E-07" ixy="2.99471022367982E-09" ixz="-2.27070327071522E-08" iyy="1.54098613150726E-07" iyz="8.50951748276882E-11" izz="2.04588694834792E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_1-2" type="revolute">
+    <origin xyz="0.00128682574872173 0.0408000000000156 0.00767115242266503" rpy="1.57079632679482 -0.523598775599879 0" />
+    <parent link="yimu_1-1" />
+    <child link="yimu_1-2" />
+    <axis xyz="0 1 0" />
+    <limit lower="-1.5708" upper="0" effort="3.3" velocity="11.84076833" />
+  </joint>
+  <link name="yimu_1-3">
+    <inertial>
+      <origin xyz="-0.0235608318124343 0.00598639262304963 -0.000351896176418252" rpy="0 0 0" />
+      <mass value="0.0166908293837373" />
+      <inertia ixx="8.30657012163924E-07" ixy="-1.11636088262198E-09" ixz="-1.36726897898059E-07" iyy="3.07330105452229E-06" iyz="1.14041945929033E-10" izz="3.1129035337968E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_1-3" type="revolute">
+    <origin xyz="0.00105000000004223 -0.00599999999996406 -0.0185999999999871" rpy="1.57079632679491 -1.5707963267949 0" />
+    <parent link="yimu_1-2" />
+    <child link="yimu_1-3" />
+    <axis xyz="0 -1 0" />
+    <limit lower="-0.3491" upper="1.3963" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_1-4">
+    <inertial>
+      <origin xyz="-0.0248778965077449 -0.00598171962066048 -0.00984324570498796" rpy="0 0 0" />
+      <mass value="0.00849583399264541" />
+      <inertia ixx="3.70091102940723E-07" ixy="2.84556678923494E-11" ixz="-7.24382797623793E-08" iyy="1.49798001498164E-06" iyz="-3.75606429379538E-09" izz="1.33062899834629E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-4.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_1-4" type="revolute">
+    <origin xyz="-0.0438999449271063 0 -0.0103000000000605" rpy="3.14159265358979 0 0" />
+    <parent link="yimu_1-3" />
+    <child link="yimu_1-4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.5708" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="yimu_1-5">
+    <inertial>
+      <origin xyz="-0.00614410143803353 -0.00600695686162461 -0.00524173647316363" rpy="0 0 0" />
+      <mass value="0.000662244880585576" />
+      <inertia ixx="2.0441355307852E-08" ixy="-9.92142110269283E-11" ixz="-3.62007820309034E-09" iyy="2.15141701390673E-08" iyz="-3.74886379972826E-11" izz="9.27644576867865E-09" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-5.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/1-5.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_1-5" type="revolute">
+    <origin xyz="-0.0411988192171927 0 -0.00705682108242003" rpy="0 -0.000165562650983723 0" />
+    <parent link="yimu_1-4" />
+    <child link="yimu_1-5" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.5708" effort="0.189369" velocity="14.66594768" />
+  </joint>
+  <link name="yimu_2-1">
+    <inertial>
+      <origin xyz="-4.70869911334826E-05 0.00540112798260216 -0.000129294968566084" rpy="0 0 0" />
+      <mass value="0.00443831868672397" />
+      <inertia ixx="6.11791327871439E-07" ixy="1.37138906172627E-08" ixz="-1.6577711199058E-07" iyy="6.58082180937177E-07" iyz="4.21374946087049E-08" izz="1.57239757589723E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/2-1.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/2-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_2-1" type="revolute">
+    <origin xyz="-0.0525600000000031 -0.0134077000000046 0.0124000000000354" rpy="0 -0.31415926535892 0" />
+    <parent link="yimu_base_link" />
+    <child link="yimu_2-1" />
+    <axis xyz="0 1 0" />
+    <limit lower="-0.3142" upper="0.3142" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_2-2">
+    <inertial>
+      <origin xyz="0.00605034028483346 0.0295463943580024 0.000838682794815021" rpy="0 0 0" />
+      <mass value="0.00823759499397246" />
+      <inertia ixx="1.52869460966029E-06" ixy="2.56200901405335E-09" ixz="-3.98968680815818E-10" iyy="3.14620452399848E-07" iyz="6.04262954479849E-08" izz="1.65600056683351E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/2-2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/2-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_2-2" type="revolute">
+    <origin xyz="-0.00230712402285935 0.00154999999999284 0.012315714503139" rpy="1.57079632679489 0.31415926535892 0" />
+    <parent link="yimu_2-1" />
+    <child link="yimu_2-2" />
+    <axis xyz="-1 0 0" />
+    <limit lower="0" upper="1.5708" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_2-3">
+    <inertial>
+      <origin xyz="-0.0170509039468826 -0.00799463501745697 -0.00672898335882105" rpy="0 0 0" />
+      <mass value="0.00180676318269501" />
+      <inertia ixx="6.91031437634448E-08" ixy="-1.7912217612837E-10" ixz="-3.80187790099594E-08" iyy="2.02732290423E-07" iyz="-2.16542831513058E-10" izz="1.58888361727451E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/2-3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/2-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_2-3" type="revolute">
+    <origin xyz="-0.00200000000121354 0.0471999999999602 -0.00339999999998889" rpy="-3.14159265358937 0 -1.57079632677003" />
+    <parent link="yimu_2-2" />
+    <child link="yimu_2-3" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="2.0508" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="yimu_2-4">
+    <inertial>
+      <origin xyz="0.00308796713647807 -0.00101722564820546 0.004772985571911" rpy="0 0 0" />
+      <mass value="0.000538173548549946" />
+      <inertia ixx="1.05131476587605E-08" ixy="5.59404222306108E-12" ixz="1.91037037076823E-12" iyy="7.53946464456707E-09" iyz="3.93528430516549E-12" izz="1.53947532179784E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/2-4.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/2-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_2-4" type="revolute">
+    <origin xyz="-0.027519 -0.0070002 -0.0089409" rpy="0 -1.5525 0" />
+    <parent link="yimu_2-3" />
+    <child link="yimu_2-4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.333" effort="0.189369" velocity="14.66594768" />
+  </joint>
+  <link name="yimu_3-1">
+    <inertial>
+      <origin xyz="4.82804718674595E-06 0.00440112798259372 0.000137517502833407" rpy="0 0 0" />
+      <mass value="0.00443831868672397" />
+      <inertia ixx="6.6582685691512E-07" ixy="-2.14831019488079E-11" ixz="-5.27146183875722E-10" iyy="6.58082180937204E-07" iyz="-4.43129640875283E-08" izz="1.03204228546017E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/3-1.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/3-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_3-1" type="revolute">
+    <origin xyz="-0.0315599999997869 -0.0124077000001226 0.0163999999999324" rpy="-3.14159265358979 0 3.14159265358979" />
+    <parent link="yimu_base_link" />
+    <child link="yimu_3-1" />
+    <axis xyz="0 1 0" />
+    <limit lower="-0.3142" upper="0.3142" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_3-2">
+    <inertial>
+      <origin xyz="-0.000838682589006625 -0.00605034038233652 0.0295463941372558" rpy="0 0 0" />
+      <mass value="0.00823759517229853" />
+      <inertia ixx="1.65600058048641E-06" ixy="-3.98966511082549E-10" ixz="-6.0426292283764E-08" iyy="1.52869461276938E-06" iyz="-2.56201081762345E-09" izz="3.14620462482184E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/3-2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/3-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_3-2" type="revolute">
+    <origin xyz="0.00599997041491093 0.000549999999981829 -0.0110000000000172" rpy="3.14159265358978 0 1.57079632679456" />
+    <parent link="yimu_3-1" />
+    <child link="yimu_3-2" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.5708" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_3-3">
+    <inertial>
+      <origin xyz="-0.0067289839652079 -0.00599463538038351 0.0170509038443947" rpy="0 0 0" />
+      <mass value="0.00180676306166683" />
+      <inertia ixx="1.5888836083952E-07" ixy="-2.16542469028626E-10" ixz="3.80187810314079E-08" iyy="2.02732281147265E-07" iyz="1.79122325189588E-10" izz="6.91031342459215E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/3-3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/3-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_3-3" type="revolute">
+    <origin xyz="0.00340000000000168 0 0.0472000000000205" rpy="0 0 0" />
+    <parent link="yimu_3-2" />
+    <child link="yimu_3-3" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="2.0508" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="yimu_3-4">
+    <inertial>
+      <origin xyz="-0.00308796713647797 -0.00101722564820542 -0.004772985571911" rpy="0 0 0" />
+      <mass value="0.000538173548549946" />
+      <inertia ixx="1.05131476587606E-08" ixy="-5.59404222298866E-12" ixz="1.91037037093175E-12" iyy="7.5394646445769E-09" iyz="-3.93528430511698E-12" izz="1.53947532179883E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/3-4.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/3-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_3-4" type="revolute">
+    <origin xyz="-0.0089409 -0.0050002 0.027519" rpy="3.1416 -0.018329 3.1416" />
+    <parent link="yimu_3-3" />
+    <child link="yimu_3-4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.333" effort="0.189369" velocity="14.66594768" />
+  </joint>
+  <link name="yimu_4-1">
+    <inertial>
+      <origin xyz="-4.82804721113096E-06 0.00540112798262197 -0.000137517502828109" rpy="0 0 0" />
+      <mass value="0.00443831868672397" />
+      <inertia ixx="6.6582685691512E-07" ixy="2.1483101946058E-11" ixz="-5.2714618385866E-10" iyy="6.58082180937198E-07" iyz="4.43129640875622E-08" izz="1.03204228546022E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/4-1.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/4-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_4-1" type="revolute">
+    <origin xyz="-0.0105599999998107 -0.0134077000001509 0.0114012670404674" rpy="0 0 0" />
+    <parent link="yimu_base_link" />
+    <child link="yimu_4-1" />
+    <axis xyz="0 1 0" />
+    <limit lower="-0.3142" upper="0.3142" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_4-2">
+    <inertial>
+      <origin xyz="0.000838682667486709 -0.00805034029668206 -0.0295463942104763" rpy="0 0 0" />
+      <mass value="0.00823759509873323" />
+      <inertia ixx="1.65600057264337E-06" ixy="3.98968282764201E-10" ixz="-6.04262942148773E-08" iyy="1.52869460748675E-06" iyz="2.56200918799928E-09" izz="3.14620457019347E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/4-2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/4-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_4-2" type="revolute">
+    <origin xyz="-0.00799997041491273 0.00155000000001151 0.0110000000000371" rpy="-3.14159265358978 0 -1.57079632679491" />
+    <parent link="yimu_4-1" />
+    <child link="yimu_4-2" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.5708" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_4-3">
+    <inertial>
+      <origin xyz="-0.00672898396686437 -0.0059946353938139 0.0170509038510379" rpy="0 0 0" />
+      <mass value="0.00180676306452602" />
+      <inertia ixx="1.5888836090906E-07" ixy="-2.16542498721539E-10" ixz="3.80187810483882E-08" iyy="2.02732281202397E-07" iyz="1.79122372305751E-10" izz="6.91031342523305E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/4-3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/4-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_4-3" type="revolute">
+    <origin xyz="-0.00340000000000165 -0.00199999999990905 -0.0472000000000057" rpy="-3.14159265358973 0 -3.14159265358978" />
+    <parent link="yimu_4-2" />
+    <child link="yimu_4-3" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="2.0508" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="yimu_4-4">
+    <inertial>
+      <origin xyz="-0.00308796713647802 -0.00101722564820544 -0.004772985571911" rpy="0 0 0" />
+      <mass value="0.000538173548549946" />
+      <inertia ixx="1.05131476587606E-08" ixy="-5.59404222282417E-12" ixz="1.910370371071E-12" iyy="7.53946464458242E-09" iyz="-3.93528430511413E-12" izz="1.53947532179938E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/4-4.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/4-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_4-4" type="revolute">
+    <origin xyz="-0.0089409 -0.0050002 0.027519" rpy="3.1416 -0.018329 3.1416" />
+    <parent link="yimu_4-3" />
+    <child link="yimu_4-4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.333" effort="0.189369" velocity="14.66594768" />
+  </joint>
+  <link name="yimu_5-1">
+    <inertial>
+      <origin xyz="4.82804718674769E-06 0.00440112798259372 0.000137517502833406" rpy="0 0 0" />
+      <mass value="0.00443831868672397" />
+      <inertia ixx="6.6582685691512E-07" ixy="-2.14831019488356E-11" ixz="-5.27146183875704E-10" iyy="6.58082180937204E-07" iyz="-4.43129640875282E-08" izz="1.03204228546017E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/5-1.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/5-1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_5-1" type="revolute">
+    <origin xyz="0.0104400000001631 -0.0124077000001226 0.00440126704047237" rpy="-3.14159265358979 0 3.14159265358979" />
+    <parent link="yimu_base_link" />
+    <child link="yimu_5-1" />
+    <axis xyz="0 1 0" />
+    <limit lower="-0.3142" upper="0.3142" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_5-2">
+    <inertial>
+      <origin xyz="-0.000838681749378475 -0.00605033927983451 0.0295463928701309" rpy="0 0 0" />
+      <mass value="0.00823759647537129" />
+      <inertia ixx="1.65600061878746E-06" ixy="-3.98990380801499E-10" ixz="-6.04262960623945E-08" iyy="1.5286946140767E-06" iyz="-2.56201185984909E-09" izz="3.1462050647864E-07" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/5-2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/5-2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_5-2" type="revolute">
+    <origin xyz="0.00599997041491093 0.000549999999981829 -0.0110000000000172" rpy="3.14159265358978 0 1.57079632679456" />
+    <parent link="yimu_5-1" />
+    <child link="yimu_5-2" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.5708" effort="1.864" velocity="16.07692878" />
+  </joint>
+  <link name="yimu_5-3">
+    <inertial>
+      <origin xyz="-0.0067289830808091 -0.00599463589704278 0.0170509040182249" rpy="0 0 0" />
+      <mass value="0.00180676325360088" />
+      <inertia ixx="1.58888362404156E-07" ixy="-2.16542333390228E-10" ixz="3.80187780962063E-08" iyy="2.02732294758617E-07" iyz="1.79122365130041E-10" izz="6.91031481569058E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/5-3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/5-3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_5-3" type="revolute">
+    <origin xyz="0.00340000000000168 0 0.0472000000000205" rpy="0 0 0" />
+    <parent link="yimu_5-2" />
+    <child link="yimu_5-3" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="2.0508" effort="0.638" velocity="11.61831603" />
+  </joint>
+  <link name="yimu_5-4">
+    <inertial>
+      <origin xyz="-0.00308796713647801 -0.00101722564820541 -0.00477298557191101" rpy="0 0 0" />
+      <mass value="0.000538173548549949" />
+      <inertia ixx="1.05131476587606E-08" ixy="-5.59404222285411E-12" ixz="1.91037037093307E-12" iyy="7.53946464457789E-09" iyz="-3.93528430512576E-12" izz="1.53947532179892E-08" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/5-4.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.894117647058823 0.894117647058823 0.894117647058823 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="meshes/5-4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yimu_5-4" type="revolute">
+    <origin xyz="-0.0089409 -0.0050002 0.027519" rpy="3.1416 -0.018329 3.1416" />
+    <parent link="yimu_5-3" />
+    <child link="yimu_5-4" />
+    <axis xyz="0 1 0" />
+    <limit lower="0" upper="1.333" effort="0.189369" velocity="14.66594768" />
+  </joint>
+<joint name="iiwa14_yimu_left_mount" type="fixed"><origin xyz="-0.010000 -0.01500 0.153709" rpy="0.000000 0.000000 -2.879797" /><parent link="iiwa14_link_ee" /><child link="yimu_base_link" /></joint></robot>

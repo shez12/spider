@@ -1,0 +1,59 @@
+# HISTORICAL staged-RL parameters. Current pure BC protocol: BC4000.md and train_bc.py.
+# Intentional changes only. train_staged.py implements this three-stage protocol.
+reference:
+  code: ../../third_party/simtoolreal
+  historical_config: ../../third_party/simtoolreal/reference/2026-09-14_14-35-39/config.yaml
+task:
+  name: target_pose_reaching
+  robot: kuka_sharpa_right
+  object: 006_mustard_bottle
+  actor_obs_dim: 140
+  add_actor_progress: false
+  action_contract: simtoolreal_native_v1
+  action_reset_reward_termination: copied_original_hooks
+  random_goal_and_success_goal_resampling: true
+  reset_from_demonstration: false
+  contact_offset_m: 0.002
+  torque_scale: 0.0
+  finite_sharpa_effort_limits: true
+actor_preparation:
+  method: SAPG_target_pose_reaching_on_demonstration_object_waypoints
+  waypoint_pool: waypoints.json
+  waypoint_epochs: 10000
+  waypoints_per_demonstration: 2
+  number_of_demonstrations: 20
+  old_residual_checkpoint_loaded: false
+  supervised_action_loss: false
+  auxiliary_critic_trained_during_actor_warmup: true
+  after_chain_complete: native_random_goals_without_episode_reset
+  skip_already_satisfied_targets: true
+  source_to_native_z_translation_m: 0.53
+  required_checkpoint_contract: simtoolreal_native_v1
+  status: implemented_three_stage_runner
+sapg:
+  num_envs: 120
+  exploration_groups: 6
+  expl_coef_block_size: 20
+  seed: 42
+  critic_warmup_epochs: 683
+  critic_warmup_transitions: 1311360
+  max_epochs: 200000
+  actor_learning_rate: 0.00001
+  actor_lr_schedule: linear
+  critic_learning_rate: 0.00005
+  e_clip: 0.05
+  warmup_log_std: -2.0
+  actor_mini_epochs: 4
+  critic_mini_epochs: 4
+  minibatch_size_per_env: 4
+  gamma: 0.99
+  tau: 0.95
+  horizon_length: 16
+  seq_length: 16
+  mixed_precision: true
+  actor_input_statistics: freeze_during_critic_warmup_then_native_online_updates
+logging:
+  wandb_metrics: all_original_scalar_tags
+  video_interval_policy_steps: 6000
+  video_length_frames: 300
+  new_output_directory_required: true

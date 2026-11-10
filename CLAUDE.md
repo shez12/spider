@@ -47,6 +47,9 @@ uv run spider/preprocess/ik.py --task=TASK --dataset-name=NAME --data-id=ID --em
 uv run examples/run_mjwp.py +override=NAME task=TASK data_id=ID robot_type=ROBOT embodiment_type=TYPE
 ```
 
+### Mustard SimToolReal experiments (`experiments/mustard_simtoolreal/`)
+Run with the conda env, not uv: `/home/szc/.conda/envs/simtoolreal_origin_isaacsim/bin/python` (Isaac launches go through `examples/arm_hand/run_local_simtoolreal.sh`). Unit tests: `cd experiments/mustard_simtoolreal && <conda python> -m unittest test_pose_curriculum test_diverse_resets test_curriculum`. The GPU is shared by several 8184-env runs (~16 GB each) plus periodic evaluation/video processes (~7–13 GB); check free VRAM before launching.
+
 ## Code Style
 
 - **Ruff** for linting and formatting: 88-char line length, Google-style docstrings, Python 3.12+ target

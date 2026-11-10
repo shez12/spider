@@ -138,7 +138,10 @@ def upload(stage, report):
 
 def download(root, report):
     """Download the bulk archive and audit every ordinary remote file identity."""
-    from examples.lifted_bench.convert_release import sha256
+    def sha256(path):
+        # Downloading data must not require the conversion/simulation runtime.
+        with Path(path).open("rb") as stream:
+            return hashlib.file_digest(stream, "sha256").hexdigest()
 
     state = json.loads((report / "candidate.json").read_text())
     marker = report / "download_started.json"

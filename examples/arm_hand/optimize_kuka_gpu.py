@@ -1,0 +1,555 @@
+"""CUDA MuJoCo Warp optimization of a prepared scene until cost plateaus.
+
+Example: python -m examples.arm_hand.optimize_kuka_gpu --resume
+Requires the repository-pinned mujoco-warp and warp-lang packages.
+"""
+
+import argparse
+import hashlib
+import json
+import time
+from pathlib import Path
+
+import mujoco
+import numpy as np
+import torch
+from spider.config import Config
+from spider.optimizers.sampling import make_optimize_once_fn
+
+
+def rotation_error(a, b):
+    """Shortest quaternion distance as a rotation vector magnitude."""
+    a = a / torch.linalg.vector_norm(a, dim=-1, keepdim=True).clamp_min(1e-12)
+    b = b / torch.linalg.vector_norm(b, dim=-1, keepdim=True).clamp_min(1e-12)
+    dot = (a * b).sum(-1).abs().clamp(0, 1)
+    return 2 * torch.atan2(torch.sqrt((1 - dot.square()).clamp_min(0)), dot)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--input-dir', type=Path, default=Path('outputs/kuka_sharpa_current_environment'))
+    parser.add_argument('--output-dir', type=Path, default=Path('outputs/kuka_sharpa_gpu'))
+    parser.add_argument('--samples', type=int, default=512)
+    parser.add_argument('--max-iterations', type=int, default=100)
+    parser.add_argument('--min-iterations', type=int, default=1)
+    parser.add_argument('--target-cost', type=float, default=100.0,
+                        help='Stop immediately when best cost is strictly below this value.')
+    parser.add_argument('--disable-target-stop', action='store_true',
+                        help='Run without a target-cost stopping condition.')
+    parser.add_argument('--disable-plateau-stop', action='store_true',
+                        help='Run without stopping when cost plateaus.')
+    parser.add_argument('--table-collision-weight', type=float, default=0.0,
+                        help='Optional squared robot-table penetration penalty; disabled by default.')
+    parser.add_argument('--patience', type=int, default=30)
+    parser.add_argument('--relative-tol', type=float, default=0.001)
+    parser.add_argument('--absolute-tol', type=float, default=0.01)
+    parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--device', default='cuda:0')
+    parser.add_argument('--resume', action='store_true')
+    parser.add_argument('--rollout-cuda-graph',action='store_true',
+                        help='Capture the complete rollout to reduce CPU kernel-submission overhead; objective and update remain unchanged.')
+    parser.add_argument('--benchmark-rollout',action='store_true',
+                        help='Compare eager and full-rollout CUDA graph execution, write benchmark.json, then exit without training.')
+    parser.add_argument('--benchmark-repeats',type=int,default=2)
+    parser.add_argument('--profile-rollout',action='store_true',
+                        help='Profile a single warmed rollout with CUDA profiler markers and Python call statistics, then exit.')
+    parser.add_argument('--profile-controls',type=int,default=6,
+                        help='Control frames in profiling-only workload; original control interpolation is retained.')
+    parser.add_argument('--profile-repeats',type=int,default=1)
+    parser.add_argument('--profile-barrier',type=Path)
+    parser.add_argument('--allow-ik-geometry-failure', action='store_true',
+                        help='Evaluate imperfect IK initialization with physical contacts enabled; retain audit failures in reports.')
+    parser.add_argument('--warm-start', type=Path,
+                        help='Initialize offsets from another checkpoint, but recompute costs and start a fresh history.')
+    parser.add_argument('--active', choices=['all', 'arm', 'hand'], default='all',
+                        help='Optimize only the selected actuators; other controls remain exactly nominal.')
+    parser.add_argument('--noise-scale', type=float, default=1.0)
+    parser.add_argument('--offset-bound', type=float, default=0.4)
+    parser.add_argument('--wrist-weight', type=float, default=15.0)
+    parser.add_argument('--fingertip-weight', type=float, default=0.0,
+                        help='Weight on actual simulated fingertip positions, separate from joint-IK posture prior.')
+    parser.add_argument('--ignore-group-acceleration',action='store_true',help='Ignore versioned group production options.')
+    parser.add_argument('--strict-candidate-pool',type=int,default=0,help='Certify actual coarsely feasible samples instead of only the minimum-cost sample.')
+    parser.add_argument('--strict-check-every',type=int,default=0,help='Opt-in early exit only after both original strict physics audits pass.')
+    parser.add_argument('--cache-policy-context',action='store_true',help='Cache the frozen scene contribution of the feedback policy.')
+    parser.add_argument('--reference-policy',type=Path,help='Experimental reference-conditioned feedback controller.')
+    parser.add_argument('--fallback-start',type=Path,help='Experimental: retain original checkpoint as one physically evaluated candidate.')
+    parser.add_argument('--transition-dir', type=Path,
+                        help='Opt-in bounded export of actual candidate rollouts for world-model training.')
+    parser.add_argument('--source-group', help='Original demonstration ID, shared by all augmentations.')
+    parser.add_argument('--transition-every', type=int, default=10)
+    parser.add_argument('--transition-worlds', type=int, default=8)
+    parser.add_argument('--transition-max-shards', type=int, default=20)
+    args = parser.parse_args()
+    from examples.arm_hand.runtime_acceleration import apply_group_options
+    acceleration_runtime=apply_group_options(args)
+    if args.strict_candidate_pool<0:parser.error('strict-candidate-pool must be nonnegative')
+    if args.strict_check_every<0:parser.error('strict-check-every must be nonnegative')
+    if args.transition_dir and (not args.source_group or min(args.transition_every,args.transition_worlds,args.transition_max_shards)<1):
+        parser.error('Transition export requires --source-group and positive export quotas')
+    if args.rollout_cuda_graph and not args.benchmark_rollout:
+        parser.error('Full-rollout CUDA Graph has not passed performance/equivalence validation; use --benchmark-rollout only. Production execution remains unchanged.')
+    if args.samples < 10 or args.patience < 1 or args.max_iterations < 1:
+        parser.error('samples >= 10, patience >= 1, max-iterations >= 1 required')
+    if args.relative_tol < 0 or args.absolute_tol < 0:
+        parser.error('tolerances must be nonnegative')
+    if args.benchmark_repeats<1:parser.error('benchmark repeats must be positive')
+    from examples.arm_hand.mps_startup import cuda_available
+    if not args.device.startswith('cuda') or not cuda_available(torch):
+        raise RuntimeError('A working CUDA GPU is required; CPU fallback is disabled.')
+    import warp as wp
+    import mujoco_warp as mw
+
+    wp.init()
+    wp.set_device(args.device)
+    torch.cuda.set_device(args.device)
+    # Warp's default CUDA stream is NOT PyTorch's default stream. All shared
+    # tensors, graph launches, controls and costs must use the same stream.
+    # A dedicated non-default Torch stream also supports CUDA graph capture.
+    shared_stream = torch.cuda.Stream(device=args.device)
+    torch.cuda.set_stream(shared_stream)
+    wp.set_stream(wp.stream_from_torch(shared_stream))
+    torch.manual_seed(args.seed)
+    out = args.output_dir.resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    if acceleration_runtime is not None:(out/'acceleration_runtime.json').write_text(json.dumps(acceleration_runtime,indent=2)+'\n')
+    scene = args.input_dir.resolve() / 'scene.xml'
+    reference = args.input_dir.resolve() / 'reference.npz'
+    geometry_report = args.input_dir.resolve() / 'geometry_report.json'
+    if geometry_report.exists() and not json.loads(geometry_report.read_text()).get('ready_for_gpu', False) and not args.allow_ik_geometry_failure:
+        raise RuntimeError('Geometry audit failed; fix initial alignment and table clearance before GPU optimization.')
+    signature = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in [scene, reference]}
+    model = mujoco.MjModel.from_xml_path(str(scene))
+    with np.load(reference) as archive:
+        ref = {k: archive[k] for k in archive.files}
+    cpu = mujoco.MjData(model)
+    mujoco.mj_setState(model, cpu, ref['initial_state'], mujoco.mjtState.mjSTATE_FULLPHYSICS)
+    mujoco.mj_forward(model, cpu)
+    dev = args.device
+    tensor = lambda a: torch.as_tensor(a, dtype=torch.float32, device=dev)
+    policy=None
+    if args.cache_policy_context and not args.reference_policy:parser.error('Context cache requires a reference policy')
+    if args.reference_policy:
+        if args.active!='all' or args.fallback_start or args.benchmark_rollout or args.rollout_cuda_graph:
+            parser.error('Feedback policy supports active all, eager rollout, and no open-loop fallback')
+        from examples.arm_hand.world_model_policy import load_policy
+        from examples.arm_hand.world_model import scene_spec, canonical
+        policy,policy_ck=load_policy(args.reference_policy,dev)
+        _,policy_spec,policy_scene_context=scene_spec(scene)
+        if policy_spec!=policy_ck['spec']:raise ValueError('Feedback policy scene topology differs')
+        for parameter in policy.parameters():parameter.requires_grad_(False)
+        policy_context=tensor(policy_scene_context)
+        policy_cache=policy.prepare_context(policy_context) if args.cache_policy_context else None
+        policy_goals=tensor(canonical(np.concatenate((ref['joint_ik'],ref['object_qpos']),-1)))
+        policy_lookahead=policy_ck['lookahead']
+
+    n, knots, nu = args.samples, 10, model.nu
+    arm_dofs = nu - 22
+    if arm_dofs not in (0, 7) or model.nq != nu + 7:
+        raise ValueError('Expected 22 hand joints, optional 7 arm joints, and one free object')
+    if args.active == 'arm' and not arm_dofs:
+        parser.error('The hand-only model has no arm actuators')
+    active = torch.ones(nu, device=dev)
+    if args.active == 'hand': active[:arm_dofs] = 0
+    if args.active == 'arm': active[arm_dofs:] = 0
+    steps = len(ref['ctrl_nominal'])
+    interpolation = tensor(np.stack([np.interp(np.arange(steps), np.linspace(0, steps-1, knots).astype(int), row) for row in np.eye(knots)], axis=1))
+    nominal = tensor(ref['ctrl_nominal'])
+    if args.profile_rollout:
+        steps=min(steps,args.profile_controls)
+        if steps<1:parser.error('profile controls must be positive')
+        interpolation=interpolation[:steps];nominal=nominal[:steps]
+    low, high = tensor(model.actuator_ctrlrange.T[0]), tensor(model.actuator_ctrlrange.T[1])
+    wrist, quat, obj, joints = [tensor(ref[k]) for k in ['wrist_pos', 'wrist_quat', 'object_qpos', 'joint_ik']]
+    fingertip_target = tensor(ref['fingertips'])
+    gpu_model = mw.put_model(model)
+    gpu_data = mw.put_data(model, cpu, nworld=n, nconmax=256, njmax=1024)
+    qpos, qvel = wp.to_torch(gpu_data.qpos), wp.to_torch(gpu_data.qvel)
+    controls, sensors = wp.to_torch(gpu_data.ctrl), wp.to_torch(gpu_data.sensordata)
+    initial_pos, initial_vel = qpos.clone(), qvel.clone()
+    prescribed_wrist = 'mocap_pos' in ref
+    if prescribed_wrist:
+        from scipy.spatial.transform import Rotation, Slerp
+        if model.nmocap != 1 or arm_dofs:
+            raise ValueError('Prescribed wrist requires a hand-only model with exactly one mocap body')
+        times = np.arange(steps+1)*0.01
+        physics_times = np.arange(steps*5+1)*0.002
+        prescribed_pos = tensor(np.column_stack([np.interp(physics_times,times,ref['mocap_pos'][:,i]) for i in range(3)]))
+        rotations = Rotation.from_quat(ref['mocap_quat'][:,[1,2,3,0]])
+        prescribed_quat = tensor(Slerp(times, rotations)(physics_times).as_quat()[:,[3,0,1,2]])
+        mocap_pos, mocap_quat = wp.to_torch(gpu_data.mocap_pos), wp.to_torch(gpu_data.mocap_quat)
+    if args.table_collision_weight:
+        table_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, 'floor')
+        robot_geom = torch.tensor([(model.geom(g).name or '').startswith(('collision_kuka_', 'collision_sharpa_'))
+                                   for g in range(model.ngeom)], device=dev)
+        contact_dist = wp.to_torch(gpu_data.contact.dist)
+        contact_geoms = wp.to_torch(gpu_data.contact.geom)
+        contact_world = wp.to_torch(gpu_data.contact.worldid)
+        contact_count = wp.to_torch(gpu_data.nacon)
+        contact_index = torch.arange(len(contact_dist), device=dev)
+    # Compile before capture, then restore the initial state for every batch.
+    mw.step(gpu_model, gpu_data)
+    wp.synchronize()
+    with wp.ScopedCapture() as capture:
+        mw.step(gpu_model, gpu_data)
+    graph = capture.graph
+    # Keep the actual candidate rollouts: replaying a contact-rich trajectory
+    # later can diverge numerically, so a 'best' video must show the states
+    # which produced the selected cost, not a fresh evaluation of its controls.
+    batch_qpos = torch.empty((n,steps,model.nq), device=dev)
+    batch_qvel = torch.empty((n,steps,model.nv), device=dev)
+    full_rollout_capture=False
+
+    def evaluate_eager(offsets, record=False, fixed_commands=None):
+        offsets = offsets * active
+        command_offsets=torch.einsum('tk,bkj->btj',interpolation,offsets)
+        commands=(nominal+command_offsets).clamp(low,high) if fixed_commands is None else fixed_commands.clone()
+        qpos.copy_(initial_pos)
+        qvel.copy_(initial_vel)
+        for name in ['time', 'qacc_warmstart', 'qacc', 'qfrc_applied', 'xfrc_applied']:
+            value = getattr(gpu_data, name, None)
+            if value is not None:
+                value.zero_()
+        cost = torch.zeros(n, device=dev)
+        poses, velocities = [], []
+        for t in range(steps):
+            if policy is not None and fixed_commands is None:
+                actual_state=torch.cat((qpos,qvel),-1)
+                if policy_cache is not None:
+                    predicted=policy.with_context(actual_state,nominal[t].expand(n,-1),policy_goals[t+1].expand(n,-1),
+                        policy_goals[min(t+policy_lookahead,len(policy_goals)-1)].expand(n,-1),policy_cache,low,high)
+                else:
+                    predicted=policy(actual_state,nominal[t].expand(n,-1),policy_goals[t+1].expand(n,-1),
+                        policy_goals[min(t+policy_lookahead,len(policy_goals)-1)].expand(n,-1),
+                        policy_context.expand(n,-1),low,high)
+                commands[:,t].copy_((predicted+command_offsets[:,t]).clamp(low,high))
+            controls.copy_(commands[:, t])
+            for sub in range(5):
+                if prescribed_wrist:
+                    mocap_pos[:,0,:].copy_(prescribed_pos[t*5+sub+1])
+                    mocap_quat[:,0,:].copy_(prescribed_quat[t*5+sub+1])
+                if full_rollout_capture:
+                    mw.step(gpu_model,gpu_data)
+                else:
+                    wp.capture_launch(graph)
+                if sub == 0 and t % 3 == 0:
+                    wrist_cost = args.wrist_weight**2 * (sensors[:, :3] - wrist[t]).square().sum(-1)
+                    rot_cost = 0.64 * rotation_error(sensors[:, 3:7], quat[t]).square()
+                    fingertip_cost = args.fingertip_weight**2 * (sensors[:,14:26].reshape(n,4,3)-fingertip_target[t]).square().sum((1,2))
+            if t % 3 == 0:
+                cost += 0.5 * (wrist_cost + rot_cost + fingertip_cost + 3600 * (qpos[:, -7:-4] - obj[t+1, :3]).square().sum(-1) + 0.09 * rotation_error(qpos[:, -4:], obj[t+1, 3:]).square() + 0.0025 * (qpos[:, arm_dofs:nu] - joints[t+1, arm_dofs:]).square().sum(-1))
+            if args.table_collision_weight:
+                a, b = contact_geoms[:, 0].long(), contact_geoms[:, 1].long()
+                table_pair = ((a == table_id) & robot_geom[b.clamp(0, model.ngeom-1)]) | ((b == table_id) & robot_geom[a.clamp(0, model.ngeom-1)])
+                valid = (contact_index < contact_count[0]) & table_pair
+                penetration = torch.where(valid, (-contact_dist-0.001).clamp_min(0), 0)
+                cost.scatter_add_(0, contact_world.long().clamp(0,n-1), args.table_collision_weight*penetration.square())
+            if record:
+                poses.append(qpos[0].clone())
+                velocities.append(qvel[0].clone())
+            batch_qpos[:,t].copy_(qpos)
+            batch_qvel[:,t].copy_(qvel)
+        cost += 0.5 * (0.0009 * offsets.square().sum((1,2)) + 0.0004 * offsets.diff(dim=1).square().sum((1,2)))
+        # Exploratory controls can produce unstable worlds. Reject those
+        # candidates without discarding the valid worlds in the same batch.
+        cost = torch.where(torch.isfinite(cost), cost, torch.full_like(cost, float('inf')))
+        return cost, commands, poses, velocities
+
+    evaluate=evaluate_eager
+    if args.profile_rollout:
+        import cProfile
+        import pstats
+        offsets=torch.zeros((n,knots,nu),device=dev)
+        if args.warm_start:
+            offsets.copy_(torch.load(args.warm_start,map_location=dev,weights_only=False)['best'].expand(n,-1,-1))
+        evaluate_eager(offsets);torch.cuda.synchronize(dev)
+        if args.profile_barrier:
+            (out/'profile_ready.json').write_text(json.dumps(dict(ready=True))+'\n')
+            while not args.profile_barrier.exists():time.sleep(.05)
+        profiler=cProfile.Profile();profiler.enable()
+        torch.cuda.profiler.start();torch.cuda.nvtx.range_push('spider_profile_rollout')
+        wall=time.perf_counter();cpu_time=time.process_time()
+        for _ in range(args.profile_repeats):
+            profile_result=evaluate_eager(offsets)
+            torch.cuda.synchronize(dev)
+        elapsed=time.perf_counter()-wall;cpu_elapsed=time.process_time()-cpu_time
+        torch.cuda.nvtx.range_pop();torch.cuda.profiler.stop();profiler.disable()
+        profiler.dump_stats(str(out/'cpu_profile.pstats'))
+        with (out/'cpu_profile.txt').open('w') as report:
+            pstats.Stats(profiler,stream=report).sort_stats('cumulative').print_stats(40)
+        (out/'profile.json').write_text(json.dumps(dict(steps=steps,samples=n,wall_s=elapsed,
+            cpu_s=cpu_elapsed,repeats=args.profile_repeats,
+            cost_finite=bool(torch.isfinite(profile_result[0]).all()),cost_mean=float(profile_result[0].mean())),indent=2)+'\n')
+        np.savez(out/'profile_state.npz',cost=profile_result[0].cpu().numpy(),qpos=qpos.cpu().numpy(),
+                 rollout_qpos=batch_qpos[0].cpu().numpy(),rollout_qvel=batch_qvel[0].cpu().numpy(),
+                 ctrl=profile_result[1][0].cpu().numpy(),initial_state=ref['initial_state'],control_dt=.01,physics_dt=.002)
+        print((out/'profile.json').read_text(),flush=True)
+        return
+    if args.rollout_cuda_graph or args.benchmark_rollout:
+        graph_inputs=torch.zeros((n,knots,nu),device=dev)
+        if args.warm_start is not None:
+            graph_seed=torch.load(args.warm_start,map_location=dev,weights_only=False)['best']
+            if graph_seed.shape!=(knots,nu):raise ValueError('Benchmark warm-start control dimensions differ')
+            graph_inputs.copy_(graph_seed.expand(n,-1,-1))
+        # Warm Torch operations and allocator before capturing. During the
+        # complete capture, record Warp steps directly rather than attempting
+        # cudaGraphLaunch inside another active stream capture.
+        evaluate_eager(graph_inputs)
+        torch.cuda.synchronize(dev)
+        measurements={}
+
+        def measure(function):
+            values=[];costs=[];last_pose=None
+            for _ in range(args.benchmark_repeats):
+                torch.cuda.synchronize(dev)
+                wall=time.perf_counter();cpu_start=time.process_time()
+                result=function(graph_inputs)
+                torch.cuda.synchronize(dev)
+                values.append(dict(wall_s=time.perf_counter()-wall,cpu_s=time.process_time()-cpu_start))
+                costs.append(result[0].detach().cpu().numpy().astype(np.float64).copy())
+                last_pose=qpos.detach().cpu().numpy().copy()
+            return values,np.stack(costs),last_pose
+
+        if args.benchmark_rollout:
+            measurements['eager'],eager_costs,eager_qpos=measure(evaluate_eager)
+            print('EAGER BENCHMARK '+json.dumps(measurements['eager']),flush=True)
+        rollout_graph=torch.cuda.CUDAGraph()
+        capture_started=time.perf_counter()
+        full_rollout_capture=True
+        with torch.cuda.graph(rollout_graph,stream=shared_stream):
+            with wp.ScopedCapture(external=True):
+                captured_results=evaluate_eager(graph_inputs)
+        full_rollout_capture=False
+        torch.cuda.synchronize(dev)
+        measurements['capture_wall_s']=time.perf_counter()-capture_started
+
+        def evaluate_graph(offsets,record=False):
+            if record:return evaluate_eager(offsets,record=True)
+            graph_inputs.copy_(offsets)
+            rollout_graph.replay()
+            return captured_results
+
+        evaluate=evaluate_graph
+        if args.benchmark_rollout:
+            measurements['cuda_graph'],graph_costs,graph_qpos=measure(evaluate_graph)
+            eager_mean=np.mean([v['wall_s'] for v in measurements['eager']])
+            graph_mean=np.mean([v['wall_s'] for v in measurements['cuda_graph']])
+            measurements.update(samples=n,steps=steps,physics_steps_per_control=5,
+                speedup=float(eager_mean/graph_mean),
+                eager_cost_mean=float(np.mean(eager_costs)),graph_cost_mean=float(np.mean(graph_costs)),
+                eager_repeat_cost_max_diff=float(np.max(np.abs(eager_costs-eager_costs[0]))),
+                graph_repeat_cost_max_diff=float(np.max(np.abs(graph_costs-graph_costs[0]))),
+                cost_max_abs_diff=float(np.max(np.abs(graph_costs[-1]-eager_costs[-1]))),
+                final_qpos_max_abs_diff=float(np.max(np.abs(graph_qpos-eager_qpos))),
+                graph_all_finite=bool(np.isfinite(graph_costs).all() and np.isfinite(graph_qpos).all()),
+                torch_peak_allocated_bytes=torch.cuda.max_memory_allocated(dev),
+                objective_unchanged=True,optimizer_unchanged=True)
+            measurements['benchmark_checkpoint']=str(args.warm_start) if args.warm_start else None
+            measurements['validation_pass']=bool(measurements['graph_all_finite'] and
+                np.isfinite(eager_costs).all() and measurements['final_qpos_max_abs_diff']<.001 and
+                measurements['cost_max_abs_diff']<max(.01,abs(measurements['eager_cost_mean'])*.001))
+            (out/'benchmark.json').write_text(json.dumps(measurements,indent=2)+'\n')
+            print(json.dumps(measurements,indent=2),flush=True)
+            return
+
+    center = torch.zeros((knots, nu), device=dev)
+    best, best_cost, anchor, stale, start, history = center.clone(), float('inf'), float('inf'), 0, 0, []
+    checkpoint = out / 'checkpoint.pt'
+    best_rollout = None
+    optimizer_settings = dict(active=args.active,noise_scale=args.noise_scale,
+                              offset_bound=args.offset_bound,wrist_weight=args.wrist_weight,fingertip_weight=args.fingertip_weight,
+                              table_collision_weight=args.table_collision_weight,
+                              sampling_policy='spider_make_optimize_once_v1',
+                              cuda_stream_policy='shared_torch_warp_v1',
+                              export_policy='actual_selected_rollout_v1')
+    if args.reference_policy:
+        optimizer_settings['reference_policy_sha256']=hashlib.sha256(args.reference_policy.read_bytes()).hexdigest()
+        if args.cache_policy_context:optimizer_settings['policy_execution']='cached_scene_context_v1'
+    if args.warm_start is not None:
+        if args.resume:
+            parser.error('--warm-start and --resume are mutually exclusive')
+        saved = torch.load(args.warm_start, map_location=dev, weights_only=False)
+        if saved['best'].shape != center.shape:
+            raise ValueError('Warm-start control dimensions differ')
+        if saved.get('experimental'):
+            if saved.get('signature') != signature:
+                raise ValueError('Model proposal belongs to a different candidate')
+            if args.active != 'all':
+                raise ValueError('Model proposals currently support --active all only')
+            if not torch.isfinite(saved['best']).all() or saved['best'].abs().max() > args.offset_bound + 1e-6:
+                raise ValueError('Model proposal exceeds configured finite control bounds')
+        best = saved['best'].clone()
+        center = best.clone()
+    if args.resume and checkpoint.exists():
+        saved = torch.load(checkpoint, map_location=dev, weights_only=False)
+        if saved['signature'] != signature or saved['samples'] != n:
+            raise ValueError('Resume scene/reference hashes or sample count differ.')
+        if saved.get('optimizer_settings') != optimizer_settings:
+            raise ValueError('Resume optimization settings differ; choose a new output or use --warm-start.')
+        center, best = saved['center'], saved['best']
+        best_cost, anchor, stale, start, history = [saved[k] for k in ['best_cost','anchor','stale','iteration','history']]
+        best_rollout = saved.get('best_rollout')
+        torch.cuda.set_rng_state(saved['rng'].cpu(), dev)
+    fallback = None
+    if args.fallback_start:
+        if not args.warm_start or args.resume or args.active != 'all':
+            parser.error('--fallback-start requires --warm-start, --active all, and a fresh output')
+        source = torch.load(args.fallback_start,map_location=dev,weights_only=False)
+        if source.get('signature') != signature or source['best'].shape != center.shape:
+            raise ValueError('Fallback checkpoint belongs to a different candidate')
+        fallback = source['best'].clone()
+        if not torch.isfinite(fallback).all() or fallback.abs().max() > args.offset_bound + 1e-6:
+            raise ValueError('Fallback controls exceed finite bounds')
+        optimizer_settings['fallback_sha256'] = hashlib.sha256(args.fallback_start.read_bytes()).hexdigest()
+    scale = tensor([0.035]*arm_dofs + [0.12]*22)*active*args.noise_scale
+    config = Config(device=args.device, num_samples=n, use_torch_compile=False,
+                    temperature=1.0, num_trace_uniform_samples=0, num_trace_topk_samples=0)
+    config.knot_steps = 1
+    config.noise_scale = scale.expand(n, knots, nu).clone()
+    config.noise_scale[0] = 0
+    from examples.arm_hand.strict_candidate_bank import StrictCandidateBank
+    strict_bank=StrictCandidateBank(args.strict_candidate_pool)
+    finite_count = n
+    export_calls = 0
+    export_count = 0
+    if args.transition_dir:
+        from examples.arm_hand.world_model import scene_spec, save_shard
+        _, transition_spec, transition_context = scene_spec(scene)
+        args.transition_dir.mkdir(parents=True, exist_ok=True)
+        export_count = len(list(args.transition_dir.glob('transitions_*.npz')))
+
+    def rollout(config, env, candidates, ref_slice, env_param):
+        nonlocal best, best_cost, best_rollout, finite_count, export_calls, export_count
+        candidates = candidates.clamp(-args.offset_bound, args.offset_bound)*active
+        if fallback is not None:candidates[1].copy_(fallback)
+        costs, commands, _, _ = evaluate(candidates)
+        finite_count = int(torch.isfinite(costs).sum())
+        if not finite_count:
+            raise RuntimeError('All GPU candidates are nonfinite; previous checkpoint preserved.')
+        if args.transition_dir and export_calls % args.transition_every == 0 and export_count < args.transition_max_shards:
+            # Preserve the optimizer RNG: logging must not change sampled controls.
+            valid_ids = torch.nonzero(torch.isfinite(costs)).flatten()
+            ordered = valid_ids[torch.argsort(costs[valid_ids])]
+            count = min(args.transition_worlds, len(ordered))
+            ranks = torch.linspace(0, len(ordered)-1, count, device=dev).long()
+            ids = ordered[ranks]
+            import uuid
+            shard = args.transition_dir / f'transitions_{uuid.uuid4().hex}.npz'
+            save_shard(shard, batch_qpos[ids].cpu().numpy(), batch_qvel[ids].cpu().numpy(),
+                commands[ids].cpu().numpy(), initial_pos[0].cpu().numpy(), initial_vel[0].cpu().numpy(),
+                costs[ids].cpu().numpy(), transition_spec, args.source_group, transition_context)
+            export_count += 1
+        export_calls += 1
+        if args.strict_check_every and args.strict_candidate_pool:
+            strict_bank.observe(candidates,costs,commands,batch_qpos,batch_qvel,ref['object_qpos'])
+        index = costs.argmin()
+        current = float(costs[index])
+        if current < best_cost:
+            best_cost, best = current, candidates[index].clone()
+            best_rollout = dict(qpos=batch_qpos[index].clone(), qvel=batch_qvel[index].clone(),
+                                ctrl=commands[index].clone())
+        return candidates, -costs, torch.zeros(n, dtype=torch.bool, device=dev), {}
+
+    update = make_optimize_once_fn(rollout)
+    reason = 'maximum_iterations'
+    verified_replay=None;strict_attempts=[];last_strict_cost=None
+    optimization_started=time.monotonic()
+    for iteration in range(start, args.max_iterations):
+        iteration_started=time.monotonic()
+        if not args.disable_target_stop and best_cost < args.target_cost:
+            reason = 'target_cost'
+            break
+        noise = 0.97**iteration
+        center, _, _ = update(config, None, center, (),
+                              sample_params={'global_noise_scale': noise})
+        if not torch.isfinite(center).all():
+            raise RuntimeError('Original SPIDER update returned nonfinite controls.')
+        if anchor - best_cost > max(args.absolute_tol, args.relative_tol*abs(anchor)) or not np.isfinite(anchor):
+            anchor, stale = best_cost, 0
+        else:
+            stale += 1
+        history.append({'iteration':iteration+1,'best_cost':best_cost,'stale_iterations':stale,'noise':noise,'invalid_candidates':n-finite_count,'iteration_s':time.monotonic()-iteration_started})
+        plateau_status = f'{stale} (disabled)' if args.disable_plateau_stop else f'{stale}/{args.patience}'
+        print(f'GPU {iteration+1}: cost={best_cost:.6f}, plateau={plateau_status}, invalid={n-finite_count}/{n}', flush=True)
+        checkpoint_temporary=checkpoint.with_suffix('.tmp')
+        torch.save(dict(signature=signature,samples=n,center=center,best=best,best_cost=best_cost,anchor=anchor,stale=stale,iteration=iteration+1,history=history,rng=torch.cuda.get_rng_state(dev),optimizer_settings=optimizer_settings,best_rollout=best_rollout), checkpoint_temporary)
+        checkpoint_temporary.replace(checkpoint)
+        history_path=out/'history.json';history_temporary=history_path.with_suffix('.tmp')
+        history_temporary.write_text(json.dumps(history, indent=2)+'\n')
+        history_temporary.replace(history_path)
+        if args.strict_check_every and (iteration+1)%args.strict_check_every==0 and best_rollout is not None:
+            from examples.arm_hand.audit_right_trajectory import audit_states,quaternion_error
+            from examples.arm_hand.mustard_valid100 import valid
+            if args.strict_candidate_pool:
+                entries=strict_bank.take()
+            elif best_cost!=last_strict_cost:
+                entries=[dict(cost=best_cost,offsets=best,rollout=best_rollout)]
+            else:entries=[]
+            last_strict_cost=best_cost
+            for entry in entries:
+                q=entry['rollout']['qpos'].cpu().numpy()
+                object_rmse=float(np.sqrt(np.mean(np.sum((q[:,-7:-4]-ref['object_qpos'][1:,:3])**2,axis=1))))
+                final_position=float(np.linalg.norm(q[-1,-7:-4]-ref['object_qpos'][-1,:3]))
+                final_rotation=float(np.degrees(np.linalg.norm(quaternion_error(q[-1,-4:],ref['object_qpos'][-1,3:]))))
+                if not (object_rmse<.03 and final_position<.03 and final_rotation<20):continue
+                validation_started=time.monotonic()
+                selected_report=audit_states(model,ref,dict(qpos=q,initial_state=ref['initial_state']))
+                attempt=dict(iteration=iteration+1,candidate_cost=entry['cost'],search_best_cost=best_cost,selected=selected_report,accepted=False)
+                if valid(selected_report):
+                    replay=evaluate_eager(entry['offsets'].expand(n,-1,-1),record=True,fixed_commands=entry['rollout']['ctrl'].expand(n,-1,-1))
+                    replay_report=audit_states(model,ref,dict(qpos=torch.stack(replay[2]).cpu().numpy(),initial_state=ref['initial_state']))
+                    attempt['replay']=replay_report;attempt['accepted']=valid(replay_report)
+                    if attempt['accepted']:
+                        verified_replay=(replay[0][:1].clone(),replay[1][:1].clone(),replay[2],replay[3])
+                        search_best_before_acceptance=best_cost
+                        best=entry['offsets'].clone();best_cost=entry['cost'];best_rollout=entry['rollout']
+                        if args.strict_candidate_pool:
+                            center=best.clone();anchor=best_cost;stale=0
+                            history[-1]['selected_feasible_cost']=best_cost
+                            history_temporary.write_text(json.dumps(history,indent=2)+'\n');history_temporary.replace(history_path)
+                            torch.save(dict(signature=signature,samples=n,center=center,best=best,best_cost=best_cost,anchor=anchor,stale=stale,
+                                iteration=iteration+1,history=history,rng=torch.cuda.get_rng_state(dev),optimizer_settings=optimizer_settings,
+                                best_rollout=best_rollout,search_best_cost=search_best_before_acceptance,selection_policy='strictly_valid_actual_candidate'),checkpoint_temporary)
+                            checkpoint_temporary.replace(checkpoint)
+                attempt['elapsed_s']=time.monotonic()-validation_started;strict_attempts.append(attempt)
+                (out/'strict_validation.json').write_text(json.dumps(strict_attempts,indent=2)+'\n')
+                if attempt['accepted']:break
+            if verified_replay is not None:
+                reason='strict_dual_validation'
+                print(f'Strict selected + independent replay passed at iteration {iteration+1}',flush=True)
+                break
+        if not args.disable_target_stop and best_cost < args.target_cost:
+            reason = 'target_cost'
+            break
+        if not args.disable_plateau_stop and iteration+1 >= args.min_iterations and stale >= args.patience:
+            reason = 'cost_plateau'
+            break
+    optimization_elapsed_s=time.monotonic()-optimization_started
+    if verified_replay is not None:
+        cost,commands,poses,velocities=verified_replay
+    else:
+        replay_controls=best_rollout['ctrl'].expand(n,-1,-1) if policy is not None and best_rollout is not None else None
+        if replay_controls is not None:
+            cost,commands,poses,velocities=evaluate_eager(best.expand(n,-1,-1),record=True,fixed_commands=replay_controls)
+        else:
+            cost,commands,poses,velocities=evaluate(best.expand(n,-1,-1),record=True)
+    if best_rollout is None:
+        raise RuntimeError('Checkpoint does not contain its selected rollout; start a new run or use --warm-start.')
+    extra = {}
+    if prescribed_wrist:
+        extra=dict(mocap_pos=prescribed_pos[5::5].cpu().numpy()[:,None,:],
+                   mocap_quat=prescribed_quat[5::5].cpu().numpy()[:,None,:])
+    np.savez(out/'trajectory.npz',initial_state=ref['initial_state'],ctrl=best_rollout['ctrl'].cpu().numpy(),qpos=best_rollout['qpos'].cpu().numpy(),qvel=best_rollout['qvel'].cpu().numpy(),control_dt=0.01,physics_dt=0.002,**extra)
+    np.savez(out/'replay_trajectory.npz',initial_state=ref['initial_state'],
+             ctrl=commands[0].cpu().numpy(),qpos=torch.stack(poses).cpu().numpy(),
+             qvel=torch.stack(velocities).cpu().numpy(),control_dt=0.01,physics_dt=0.002,**extra)
+    result = dict(backend='mujoco_warp',device=dev,gpu=torch.cuda.get_device_name(dev),best_cost=best_cost,export_rollout_cost=best_cost,independent_replay_cost=float(cost[0]),stop_reason=reason,iterations=len(history),signature=signature,extra_hold=False,cuda_stream_policy='shared_torch_warp_v1',export_policy='actual_selected_rollout_v1',arguments={k:str(v) if isinstance(v,Path) else v for k,v in vars(args).items()},limitations='Shared Torch/Warp CUDA stream. Exported states are the actual winning candidate rollout; independent GPU replay may differ in contact-rich dynamics.')
+    result['optimization_elapsed_s']=optimization_elapsed_s
+    result['strict_validation_attempts']=len(strict_attempts)
+    result['strict_validation_elapsed_s']=sum(item['elapsed_s'] for item in strict_attempts)
+    (out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
+    print(json.dumps(result,indent=2))
+
+
+if __name__ == '__main__':
+    main()
