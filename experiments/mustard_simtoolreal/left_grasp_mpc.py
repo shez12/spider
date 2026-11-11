@@ -25,6 +25,7 @@ def main():
     p.add_argument('--iterations',type=int,default=2);p.add_argument('--temperature',type=float,default=.05)
     p.add_argument('--arm-sigma',type=float,default=.6);p.add_argument('--hand-sigma',type=float,default=.35);p.add_argument('--knot',type=int,default=5)
     p.add_argument('--settle',type=int,default=60);p.add_argument('--seed',type=int,default=0)
+    p.add_argument('--object-dir',type=Path,help='object asset directory; default assets/object (mustard bottle)')
     AppLauncher.add_app_launcher_args(p);a=p.parse_args()
     a.output=a.output.resolve();assert not a.output.exists(),'Use a fresh output directory.';a.output.mkdir(parents=True)
     app=AppLauncher(a).app;code=0
@@ -42,10 +43,11 @@ def run(a):
     from diverse_resets import capture_states,restore_states,table_top_z
     torch.manual_seed(a.seed)
     (a.output/'run_arguments.json').write_text(json.dumps(vars(a),indent=1,default=str)+'\n')
-    cal=json.loads((HERE/'assets/object/calibration.json').read_text())
+    from adept_obs import object_dir_of,object_urdf
+    cal=json.loads((object_dir_of(a.object_dir)/'calibration.json').read_text())
     cfg=SimToolRealEnvCfg();cfg.from_dict(yaml.safe_load((PRISTINE/'isaacsimenvs/cfg/task/SimToolReal.yaml').read_text()))
     G,S=a.groups,a.samples;N=G*S;cfg.seed=a.seed;cfg.scene.num_envs=N
-    cfg.assets.object_urdf=str(HERE/'assets/object/mustard_bottle.urdf');cfg.assets.object_scale=tuple(cal['policy_object_scale']);cfg.reward.fixed_size=tuple(cal['bbox_dims_m'])
+    cfg.assets.object_urdf=str(object_urdf(a.object_dir));cfg.assets.object_scale=tuple(cal['policy_object_scale']);cfg.reward.fixed_size=tuple(cal['bbox_dims_m'])
     dr=cfg.domain_randomization;dr.use_action_delay=False;dr.use_obs_delay=False;dr.use_object_state_delay_noise=False
     dr.joint_velocity_obs_noise_std=0.;dr.force_scale=0.;dr.torque_scale=0.
     cfg.episode_length_s=1e5;cfg.termination.episode_length=10**8;cfg.termination.tolerance_curriculum_interval=10**9

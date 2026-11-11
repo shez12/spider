@@ -27,6 +27,15 @@ def main():
     p.add_argument('--state-bank',type=Path,help='left_reset_bank.py bank (MPC grasp states); mixed with vendor native resets')
     p.add_argument('--bank-delta-first-goal',action='store_true',help='bank episodes: first goal from the vendor delta sampler around the restored object')
     p.add_argument('--bank-probabilities',type=float,nargs=4,default=(.5,.2,.15,.15),help='native, near_object, grasp, lifted')
+    p.add_argument('--approach-bank',type=Path,help='approach_curriculum.py bank: start states along scripted demo-relative approaches; the start retreats to the native start as the lift rate from bank starts passes --approach-threshold')
+    p.add_argument('--approach-share',type=float,default=.3);p.add_argument('--approach-threshold',type=float,default=.5);p.add_argument('--approach-step',type=float,default=.1)
+    p.add_argument('--approach-width',type=float,default=.2);p.add_argument('--approach-min-episodes',type=int,default=2000)
+    p.add_argument('--carry-bank',type=Path,help='carry_curriculum.py bank: held-in-the-air start states whose first goal grows from next to the bottle to the vendor distribution')
+    p.add_argument('--carry-share',type=float,default=.5);p.add_argument('--carry-threshold',type=float,default=.3);p.add_argument('--carry-min-episodes',type=int,default=2000)
+    p.add_argument('--episode-stats',action='store_true',help='log the per-episode native lift rate (approach_curriculum.py counters, no bank); implied by --approach-bank')
+    p.add_argument('--position-only-goal',action='store_true',help='reward/success keypoints collapse to the object centre (fixed_size=0): goals require xyz only, no orientation')
+    p.add_argument('--no-object-wrench',action='store_true',help='random force/torque impulses on the object off (force_scale=torque_scale=0)')
+    p.add_argument('--object-dir',type=Path,help='object asset directory (one URDF + calibration.json); default assets/object (mustard bottle)')
     p.add_argument('--align-left-physics',action='store_true',help='vendored code only: physics_align.install() (depenetration 1000, hand joint friction 0)')
     p.add_argument('--stop-at-tolerance-floor',action='store_true',
         help='Stop (and checkpoint) once the native tolerance curriculum reaches termination.target_success_tolerance; '
@@ -50,15 +59,19 @@ def train(a):
     from isaacsimenvs.utils.rlgames_utils import register_rlgames_env,EnvStatsAlgoObserver,MultiObserver
     def save(name,v):(a.output/name).write_text(json.dumps(v,indent=2,default=str)+'\n')
     save('run_arguments.json',vars(a))
-    cal=json.loads((HERE/'assets/object/calibration.json').read_text())
+    from adept_obs import object_dir_of,object_urdf
+    assert a.object_dir is None or a.object_repr in ('bbox','adept'),'--object-dir is not wired for the pointcloud representation'
+    cal=json.loads((object_dir_of(a.object_dir)/'calibration.json').read_text())
     cfg=SimToolRealEnvCfg();cfg.from_dict(yaml.safe_load((PRISTINE/'isaacsimenvs/cfg/task/SimToolReal.yaml').read_text()))
     cfg.seed=a.seed;cfg.scene.num_envs=a.num_envs
-    cfg.assets.object_urdf=str(HERE/'assets/object/mustard_bottle.urdf');cfg.assets.object_scale=tuple(cal['policy_object_scale'])
+    cfg.assets.object_urdf=str(object_urdf(a.object_dir));cfg.assets.object_scale=tuple(cal['policy_object_scale'])
     cfg.reward.fixed_size=tuple(cal['bbox_dims_m'])
+    if a.position_only_goal:assert cfg.reward.fixed_size_keypoint_reward;cfg.reward.fixed_size=(0.,0.,0.)
+    if a.no_object_wrench:cfg.domain_randomization.force_scale=0.;cfg.domain_randomization.torque_scale=0.
     if a.object_repr=='pointcloud':install_pointcloud_obs(a.pc_points,a.output)
     if a.object_repr=='adept':
         from adept_obs import install_adept_obs,ADEPT_OBS,ADEPT_STATE
-        install_adept_obs(a.pc_points,a.output);cfg.obs.obs_list=list(ADEPT_OBS);cfg.obs.state_list=list(ADEPT_STATE)
+        install_adept_obs(a.pc_points,a.output,a.object_dir);cfg.obs.obs_list=list(ADEPT_OBS);cfg.obs.state_list=list(ADEPT_STATE)
     if a.align_left_physics:
         import physics_align;save('physics_align.json',physics_align.install())
     env=SimToolRealEnv(cfg);save('environment_config.json',env.cfg.to_dict())
@@ -67,6 +80,21 @@ def train(a):
         from left_reset_bank import StateResetBank,signature
         sig=signature(PRISTINE/cfg.assets.robot_urdf,cfg.assets.object_urdf,PRISTINE/'isaacsimenvs/cfg/task/SimToolReal.yaml')
         bank=StateResetBank(env,a.state_bank,tuple(a.bank_probabilities),expected_signature=sig,delta_first_goal=a.bank_delta_first_goal);save('state_bank.json',bank.report())
+    approach=None
+    if a.approach_bank or a.episode_stats:
+        assert bank is None,'--approach-bank/--episode-stats and --state-bank both wrap the reset'
+        from approach_curriculum import ApproachCurriculum
+        from left_reset_bank import signature
+        sig=signature(PRISTINE/cfg.assets.robot_urdf,cfg.assets.object_urdf,PRISTINE/'isaacsimenvs/cfg/task/SimToolReal.yaml')
+        approach=bank=ApproachCurriculum(env,a.approach_bank,a.approach_share,a.approach_threshold,a.approach_step,a.approach_width,a.approach_min_episodes,expected_signature=sig)
+        save('approach_curriculum.json',approach.report())
+    if a.carry_bank:
+        assert bank is None,'--carry-bank, --approach-bank/--episode-stats and --state-bank all wrap the reset'
+        from carry_curriculum import CarryCurriculum
+        from left_reset_bank import signature
+        sig=signature(PRISTINE/cfg.assets.robot_urdf,cfg.assets.object_urdf,PRISTINE/'isaacsimenvs/cfg/task/SimToolReal.yaml')
+        approach=bank=CarryCurriculum(env,a.carry_bank,a.carry_share,a.carry_threshold,a.carry_min_episodes,expected_signature=sig)
+        save('carry_curriculum.json',approach.report())
     curriculum=None
     if a.rot_curriculum:
         from goal_curriculum import RotationCurriculum
@@ -105,6 +133,12 @@ def train(a):
                 if change:
                     with (a.output/'curriculum_changes.jsonl').open('a') as f:f.write(json.dumps(change)+'\n')
                 extra['rot_alpha']=curriculum.alpha
+            if approach is not None:
+                extra.update(approach.update(epoch,frame))
+                if 'approach_stage_change' in extra:
+                    with (a.output/'approach_changes.jsonl').open('a') as f:f.write(json.dumps(extra.pop('approach_stage_change'))+'\n')
+                if 'carry_level_change' in extra:
+                    with (a.output/'carry_changes.jsonl').open('a') as f:f.write(json.dumps(extra.pop('carry_level_change'))+'\n')
             row=dict(epoch=epoch,frames=frame,elapsed_s=time.monotonic()-self.t0,mean_reward=float(g.game_rewards.get_mean()[0]) if g.game_rewards.current_size else None,
                 curriculum_mean_completed_goals=float(goals.mean()),native_any_goal_rate=float((goals>=1).float().mean()),
                 success_tolerance=float(env._current_success_tolerance),actor_lr=float(g.last_lr),policy_sigma_mean=float(g.model.a2c_network.sigma.exp().mean()),

@@ -1,0 +1,79 @@
+<robot name="mustard_bottle_s060">
+  <link name="object_root">
+    <inertial>
+      <origin xyz="-0.0001692803260582104 0.0002071797812752152 -0.013450822389105613" rpy="0 0 0" />
+      <mass value="0.10262541004620519" />
+      <inertia ixx="0.00010743862459585157" iyy="0.00011868359536041334" izz="3.303654474031415e-05" ixy="6.091404993523644e-06" ixz="-1.8774285890214785e-06" iyz="-6.226189513702986e-07" />
+    </inertial>
+    <collision name="right_object_0">
+      <geometry>
+        <mesh filename="right_object_0.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_1">
+      <geometry>
+        <mesh filename="right_object_1.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_10">
+      <geometry>
+        <mesh filename="right_object_10.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_11">
+      <geometry>
+        <mesh filename="right_object_11.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_12">
+      <geometry>
+        <mesh filename="right_object_12.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_2">
+      <geometry>
+        <mesh filename="right_object_2.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_3">
+      <geometry>
+        <mesh filename="right_object_3.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_4">
+      <geometry>
+        <mesh filename="right_object_4.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_5">
+      <geometry>
+        <mesh filename="right_object_5.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_6">
+      <geometry>
+        <mesh filename="right_object_6.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_7">
+      <geometry>
+        <mesh filename="right_object_7.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_8">
+      <geometry>
+        <mesh filename="right_object_8.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_9">
+      <geometry>
+        <mesh filename="right_object_9.obj" />
+      </geometry>
+    </collision>
+    <visual name="right_object_visual">
+      <geometry>
+        <mesh filename="right_object_visual.obj" />
+      </geometry>
+    </visual>
+  </link>
+</robot>

@@ -1,0 +1,52 @@
+{
+  "object_id": "006_mustard_bottle",
+  "bbox_choice": "whole visual mesh AABB, source axes; provisional grasp box",
+  "bbox_dims_m": [
+    0.05829059945875724,
+    0.03997140042668008,
+    0.11484480002691783
+  ],
+  "source_to_new_root_center_in_source_m": [
+    -0.00011576252688093105,
+    -0.00022278003800486264,
+    0.009531346233238685
+  ],
+  "policy_object_scale": [
+    1.457264986468931,
+    0.9992850106670019,
+    2.8711200006729456
+  ],
+  "keypoint_scale": 1.5,
+  "keypoints_local_m": [
+    [
+      0.04371794959406793,
+      0.02997855032001006,
+      0.08613360002018837
+    ],
+    [
+      0.04371794959406793,
+      0.02997855032001006,
+      -0.08613360002018837
+    ],
+    [
+      -0.04371794959406793,
+      -0.02997855032001006,
+      0.08613360002018837
+    ],
+    [
+      -0.04371794959406793,
+      -0.02997855032001006,
+      -0.08613360002018837
+    ]
+  ],
+  "mass_kg": 0.10262541004620519,
+  "inertia_eigenvalues": [
+    3.298662041830226e-05,
+    0.0001048015741071315,
+    0.00012137057017114531
+  ],
+  "collision_mesh_count": 13,
+  "usd_converted": false,
+  "uniform_scale": 0.6,
+  "scaled_from": "/home/szc/work/spider/experiments/mustard_simtoolreal/assets/object"
+}

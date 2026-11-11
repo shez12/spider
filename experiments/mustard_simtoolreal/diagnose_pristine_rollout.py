@@ -25,14 +25,16 @@ def run(a):
     from isaacsimenvs.tasks.simtoolreal.simtoolreal_env import SimToolRealEnv
     from isaacsimenvs.tasks.simtoolreal.simtoolreal_env_cfg import SimToolRealEnvCfg
     from deployment.rl_player import RlPlayer
-    ra=json.loads((a.run_dir/'run_arguments.json').read_text());cal=json.loads((HERE/'assets/object/calibration.json').read_text())
+    ra=json.loads((a.run_dir/'run_arguments.json').read_text());od=ra.get('object_dir');from adept_obs import object_dir_of,object_urdf;cal=json.loads((object_dir_of(od)/'calibration.json').read_text())
     cfg=SimToolRealEnvCfg();cfg.from_dict(yaml.safe_load((PRISTINE/'isaacsimenvs/cfg/task/SimToolReal.yaml').read_text()))
-    cfg.scene.num_envs=a.num_envs;cfg.assets.object_urdf=str(HERE/'assets/object/mustard_bottle.urdf')
+    cfg.scene.num_envs=a.num_envs;cfg.assets.object_urdf=str(object_urdf(od))
     cfg.assets.object_scale=tuple(cal['policy_object_scale']);cfg.reward.fixed_size=tuple(cal['bbox_dims_m'])
+    if ra.get('position_only_goal'):cfg.reward.fixed_size=(0.,0.,0.)
+    if ra.get('no_object_wrench'):cfg.domain_randomization.force_scale=0.;cfg.domain_randomization.torque_scale=0.
     repr_=ra.get('object_repr','bbox');tmp=Path(tempfile.mkdtemp())
     if repr_=='adept':
         from adept_obs import install_adept_obs,ADEPT_OBS,ADEPT_STATE
-        install_adept_obs(ra['pc_points'],tmp);cfg.obs.obs_list=list(ADEPT_OBS);cfg.obs.state_list=list(ADEPT_STATE)
+        install_adept_obs(ra['pc_points'],tmp,od);cfg.obs.obs_list=list(ADEPT_OBS);cfg.obs.state_list=list(ADEPT_STATE)
     elif repr_=='pointcloud':
         from train_pristine_mustard import install_pointcloud_obs
         install_pointcloud_obs(ra['pc_points'],tmp)

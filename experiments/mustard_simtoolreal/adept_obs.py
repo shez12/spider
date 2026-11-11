@@ -16,12 +16,20 @@ ADEPT_STATE=('joint_pos','joint_vel','prev_action_targets','palm_pos','palm_rot'
     'closest_fingertip_dist','lifted_object','progress','successes','reward')
 
 
-def mustard_surface_points(k,seed=0):
+def object_dir_of(object_dir=None):
+    return Path(object_dir).resolve() if object_dir else HERE/'assets/object'
+
+
+def object_urdf(object_dir=None):
+    d=object_dir_of(object_dir);u=sorted(d.glob('*.urdf'));assert len(u)==1,f'expected exactly one URDF in {d}';return u[0]
+
+
+def mustard_surface_points(k,seed=0,object_dir=None):
     """K farthest-point-sampled surface points of the mustard visual mesh, in the URDF link frame (m)."""
     import trimesh,xml.etree.ElementTree as ET
-    root=ET.parse(HERE/'assets/object/mustard_bottle.urdf').getroot();vis=root.find('.//visual')
+    root=ET.parse(object_urdf(object_dir)).getroot();vis=root.find('.//visual')
     origin=np.array([float(x) for x in vis.find('origin').get('xyz').split()]) if vis.find('origin') is not None else np.zeros(3)
-    mesh=trimesh.load(HERE/'assets/object'/vis.find('.//mesh').get('filename'),force='mesh')
+    mesh=trimesh.load(object_dir_of(object_dir)/vis.find('.//mesh').get('filename'),force='mesh')
     dense=np.asarray(trimesh.sample.sample_surface_even(mesh,8192,seed=seed)[0])
     idx=[int(np.argmax(np.linalg.norm(dense-dense.mean(0),axis=1)))];d=np.linalg.norm(dense-dense[idx[0]],axis=1)
     for _ in range(k-1):idx.append(int(np.argmax(d)));d=np.minimum(d,np.linalg.norm(dense-dense[idx[-1]],axis=1))
@@ -94,7 +102,7 @@ def create_adept_env(create_env,num_envs,configure,output,k=64):
     finally:module.SimToolRealEnv=cls
 
 
-def install_adept_obs(k,output):
+def install_adept_obs(k,output,object_dir=None):
     """Adds object_pos, goal_pos, goal_rot (xyzw) and object_pointcloud (K points, env frame) observation fields.
 
     Actor fields use the DR-delayed/noisy object pose (same noise as the native keypoint fields); critic fields are clean.
@@ -104,7 +112,7 @@ def install_adept_obs(k,output):
     import torch
     from isaaclab.utils.math import convert_quat
     from isaacsimenvs.tasks.simtoolreal.utils import obs_utils as ou
-    pts=mustard_surface_points(k);np.save(Path(output)/'pointcloud_object_frame.npy',pts)
+    pts=mustard_surface_points(k,object_dir=object_dir);np.save(Path(output)/'pointcloud_object_frame.npy',pts)
     ou.OBS_FIELD_SIZES.update(object_pos=3,goal_pos=3,goal_rot=4,object_pointcloud=3*k)
     cap={};orig_joint,orig_dr,orig_stack=ou._canonical_joint_obs,ou._apply_object_state_dr,ou._stack_obs_dict
     def joint(env):
