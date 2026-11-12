@@ -29,9 +29,12 @@ def main():
     p.add_argument('--bank-probabilities',type=float,nargs=4,default=(.5,.2,.15,.15),help='native, near_object, grasp, lifted')
     p.add_argument('--approach-bank',type=Path,help='approach_curriculum.py bank: start states along scripted demo-relative approaches; the start retreats to the native start as the lift rate from bank starts passes --approach-threshold')
     p.add_argument('--approach-share',type=float,default=.3);p.add_argument('--approach-threshold',type=float,default=.5);p.add_argument('--approach-step',type=float,default=.1)
+    p.add_argument('--approach-start-stage',type=float,help='with --resume: continue the approach curriculum at this stage instead of 1 (the stage is not stored in the checkpoint)')
     p.add_argument('--approach-width',type=float,default=.2);p.add_argument('--approach-min-episodes',type=int,default=2000)
     p.add_argument('--carry-bank',type=Path,help='carry_curriculum.py bank: held-in-the-air start states whose first goal grows from next to the bottle to the vendor distribution')
     p.add_argument('--carry-share',type=float,default=.5);p.add_argument('--carry-threshold',type=float,default=.3);p.add_argument('--carry-min-episodes',type=int,default=2000)
+    p.add_argument('--hold-reward',type=float,default=0.,help='carry_curriculum.HoldReward: training-only reward per step with the lifted flag latched and the bottle off the table (0: vendor reward)')
+    p.add_argument('--hold-stats',action='store_true',help='log the held-step statistics of --hold-reward without changing the reward')
     p.add_argument('--episode-stats',action='store_true',help='log the per-episode native lift rate (approach_curriculum.py counters, no bank); implied by --approach-bank')
     p.add_argument('--position-only-goal',action='store_true',help='reward/success keypoints collapse to the object centre (fixed_size=0): goals require xyz only, no orientation')
     p.add_argument('--no-object-wrench',action='store_true',help='random force/torque impulses on the object off (force_scale=torque_scale=0)')
@@ -87,6 +90,7 @@ def train(a):
         from left_reset_bank import signature
         sig=signature(PRISTINE/cfg.assets.robot_urdf,cfg.assets.object_urdf,PRISTINE/'isaacsimenvs/cfg/task/SimToolReal.yaml')
         approach=bank=ApproachCurriculum(env,a.approach_bank,a.approach_share,a.approach_threshold,a.approach_step,a.approach_width,a.approach_min_episodes,expected_signature=sig)
+        if a.approach_start_stage is not None and a.approach_bank:approach.stage=float(a.approach_start_stage)
         save('approach_curriculum.json',approach.report())
     if a.carry_bank:
         assert bank is None,'--carry-bank, --approach-bank/--episode-stats and --state-bank all wrap the reset'
@@ -95,6 +99,10 @@ def train(a):
         sig=signature(PRISTINE/cfg.assets.robot_urdf,cfg.assets.object_urdf,PRISTINE/'isaacsimenvs/cfg/task/SimToolReal.yaml')
         approach=bank=CarryCurriculum(env,a.carry_bank,a.carry_share,a.carry_threshold,a.carry_min_episodes,expected_signature=sig)
         save('carry_curriculum.json',approach.report())
+    hold=None
+    if a.hold_reward or a.hold_stats:
+        from carry_curriculum import HoldReward
+        hold=HoldReward(env,object_dir_of(a.object_dir),a.hold_reward);save('hold_reward.json',hold.report())
     curriculum=None
     if a.rot_curriculum:
         from goal_curriculum import RotationCurriculum
@@ -139,6 +147,7 @@ def train(a):
                     with (a.output/'approach_changes.jsonl').open('a') as f:f.write(json.dumps(extra.pop('approach_stage_change'))+'\n')
                 if 'carry_level_change' in extra:
                     with (a.output/'carry_changes.jsonl').open('a') as f:f.write(json.dumps(extra.pop('carry_level_change'))+'\n')
+            if hold is not None:extra.update(hold.update())
             row=dict(epoch=epoch,frames=frame,elapsed_s=time.monotonic()-self.t0,mean_reward=float(g.game_rewards.get_mean()[0]) if g.game_rewards.current_size else None,
                 curriculum_mean_completed_goals=float(goals.mean()),native_any_goal_rate=float((goals>=1).float().mean()),
                 success_tolerance=float(env._current_success_tolerance),actor_lr=float(g.last_lr),policy_sigma_mean=float(g.model.a2c_network.sigma.exp().mean()),

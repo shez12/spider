@@ -21,21 +21,26 @@ from left_reset_bank import FIELDS
 
 
 def build(a):
-    out={k:[] for k in FIELDS};level=[];source=[];sig=None;stats=dict(replays=[],attempted=0,successful=0)
+    out={k:[] for k in FIELDS};level=[];source=[];starts=[];starts_z=[];sig=None;stats=dict(replays=[],attempted=0,successful=0)
     for ri,path in enumerate(a.replays):
         with np.load(path) as z:d={k:z[k] for k in z.files}  # NpzFile decompresses on every access
         s=str(d['signature']);assert sig is None or s==sig,'replays from different environments';sig=s
-        ok=(d['first_flag']>=0)&(d['lift_waypoint_step']>0);stats['replays'].append(str(path));stats['attempted']+=len(ok);stats['successful']+=int(ok.sum())
+        od=str(d['object_dir']) if 'object_dir' in d else None;assert od is None or a.object_dir is None or Path(od).resolve()==Path(a.object_dir).resolve(),f'--object-dir {a.object_dir} but {path} was replayed with {od}'
+        if od is not None:a.object_dir=Path(od)
+        ok=(d['first_flag']>=0)&(d['lift_waypoint_step']>0)&((d['final_clearance']>a.require_held) if a.require_held is not None else True);stats['replays'].append(str(path));stats['attempted']+=len(ok);stats['successful']+=int(ok.sum())
         for i in np.flatnonzero(ok):
             for p in a.levels:
                 t=min(int(round(p*d['lift_waypoint_step'][i])),d['q'].shape[1]-1)
                 for k in ('q','v','previous','current','root'):out[k].append(d[k][i,t])
                 for k in ('goal','table','table_z'):out[k].append(d[k][i])
                 level.append(p);source.append((ri,int(d['env'][i]),t,int(d['source'][i])))
+        starts.append(d['root'][ok,0]);starts_z.append(d['table_z'][ok])
     arrays={k:np.stack(v).astype(np.float32) for k,v in out.items()};a.output.parent.mkdir(parents=True,exist_ok=True)
     # bank states must be before the lift: drop whole paths on which the bottle is off the table at any kept level
     from mirror_right_bank import HERE,clearance,mesh_vertices
     L=len(a.levels);c=clearance(arrays['root'].astype(np.float64),mesh_vertices(a.object_dir or HERE/'assets/object')[0],arrays['table_z'].astype(np.float64)).reshape(-1,L)
+    c0=clearance(np.concatenate(starts).astype(np.float64),mesh_vertices(a.object_dir or HERE/'assets/object')[0],np.concatenate(starts_z).astype(np.float64))
+    assert np.median(np.abs(c0))<.005,f'settled start clearance median {np.median(np.abs(c0)):.3f} m: the mesh does not match the replayed object (--object-dir)'
     keep=np.repeat(np.abs(c).max(1)<a.max_clearance,L);stats['dropped_bottle_off_table']=int((~keep).sum())//L
     arrays={k:v[keep] for k,v in arrays.items()};level=list(np.array(level)[keep]);source=[s for s,m in zip(source,keep) if m]
     np.savez_compressed(a.output,**arrays,level=np.array(level,dtype=np.float32),kind=np.ones(len(level),dtype=np.int64),source=np.array(source),signature=np.array(sig),format_version=np.array(1))
@@ -96,5 +101,6 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__,formatter_class=argparse.RawDescriptionHelpFormatter);sub=p.add_subparsers(dest='cmd',required=True)
     b=sub.add_parser('build');b.add_argument('--replays',type=Path,nargs='+',required=True);b.add_argument('--output',type=Path,required=True)
     b.add_argument('--object-dir',type=Path);b.add_argument('--max-clearance',type=float,default=.01)
+    b.add_argument('--require-held',type=float,help='keep only paths whose object is still this many m above the table at the end of the replay (e.g. 0.03); default: lifted once is enough')
     b.add_argument('--levels',type=float,nargs='+',default=[round(.1*i,1) for i in range(1,11)])
     build(p.parse_args())

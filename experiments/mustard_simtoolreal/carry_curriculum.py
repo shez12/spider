@@ -95,6 +95,33 @@ class CarryCurriculum:
         return dict(bank=str(self.path),share=self.share,threshold=self.threshold,min_episodes=self.min_episodes,states=self.states,levels=[list(l) for l in LEVELS])
 
 
+class HoldReward:
+    """Training-only shaping on top of the vendor reward: +scale on every step on which the lifted flag is latched and
+    the lowest bottle point is > min_clearance above the table.  The vendor reward pays nothing for keeping the bottle
+    in the hand after the lift bonus (only new minima of the goal distance and the goal bonus), and a bottle dropped
+    on the table does not end the episode.  Success, termination and evaluation are untouched."""
+    def __init__(self,env,object_dir,scale,min_clearance=.03):
+        import torch
+        from scipy.spatial import ConvexHull
+        from isaaclab.utils.math import matrix_from_quat
+        from mirror_right_bank import mesh_vertices
+        V=mesh_vertices(Path(object_dir))[0];hull=torch.tensor(V[np.unique(ConvexHull(V).vertices)],device=env.device,dtype=torch.float32)
+        self.scale,self.min_clearance=scale,min_clearance;self.sum=torch.zeros(3,device=env.device);original=env._get_rewards
+        def rewards():
+            r=original();pos=env.object.data.root_pos_w-env.scene.env_origins
+            c=(matrix_from_quat(env.object.data.root_quat_w)[:,2,:]@hull.T).min(1).values+pos[:,2]-(env._table_z_per_env+.15)
+            held=env._lifted_object&(c>min_clearance);self.sum+=torch.stack([held.sum(),env._lifted_object.sum(),torch.ones_like(c).sum()])
+            return r+scale*held.float()
+        env._get_rewards=rewards
+
+    def update(self):
+        h,l,n=self.sum.cpu().tolist();self.sum.zero_()
+        return dict(held_step_fraction=h/n if n else None,held_share_of_lifted_steps=h/l if l else None)
+
+    def report(self):
+        return dict(scale=self.scale,min_clearance=self.min_clearance)
+
+
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__,formatter_class=argparse.RawDescriptionHelpFormatter);sub=p.add_subparsers(dest='cmd',required=True)
     b=sub.add_parser('build');b.add_argument('--replays',type=Path,nargs='+',required=True);b.add_argument('--output',type=Path,required=True)

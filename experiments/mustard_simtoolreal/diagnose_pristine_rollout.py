@@ -51,21 +51,23 @@ def run(a):
     tol=float(env._current_success_tolerance)*cfg.reward.keypoint_scale
     obs,_=env.reset();n=a.num_envs;dev=env.device
     lifted_steps=torch.zeros(n,device=dev);best=torch.full((n,),9.,device=dev);maxz=torch.zeros(n,device=dev);rows=[]
+    air=torch.zeros(n,device=dev)  # steps with the object >5 cm above its start height: unlike the latched lift flag this stops counting once dropped
     bpos=torch.full((n,),9.,device=dev);brot=torch.full((n,),999.,device=dev);kind=bank.current_kind.clone() if bank else torch.zeros(n,dtype=torch.long,device=dev)
     for step in range(a.steps):
         act=pl.get_normalized_action(obs['policy'],deterministic_actions=True)
         prev_succ=env._successes.clone();lifted=env._lifted_object.clone()
         obs,_,term,trunc,_=env.step(act)
         lifted_steps+=env._lifted_object.float();z=env.object.data.root_pos_w[:,2]-env.scene.env_origins[:,2];maxz=torch.maximum(maxz,z)
+        air+=((z>env._object_init_z+.05)&~(term|trunc)).float()
         best=torch.where(env._lifted_object,torch.minimum(best,env._keypoints_max_dist),best)
         o=env.scene.env_origins;pe=(env.object.data.root_pos_w-env.goal_viz.data.root_pos_w).norm(dim=-1)
         q=quat_mul(quat_conjugate(env.goal_viz.data.root_quat_w),env.object.data.root_quat_w);re=torch.rad2deg(2*torch.acos(q[:,0].abs().clamp(max=1.)))
         bpos=torch.minimum(bpos,pe);brot=torch.where(pe<=bpos+1e-6,re,brot)
         for i in (term|trunc).nonzero().flatten().tolist():
             rows.append(dict(goals=int(env._prev_episode_successes[i]),lifted_steps=int(lifted_steps[i]),best_kp=float(best[i]),
-                max_z=float(maxz[i]),timeout=bool(trunc[i]),lifted_at_end=bool(lifted[i]),
+                max_z=float(maxz[i]),timeout=bool(trunc[i]),lifted_at_end=bool(lifted[i]),air_steps=int(air[i]),
                 reason=[k for k,v in env._termination_reasons.items() if bool(v[i])],kind=int(kind[i]),best_pos_err=float(bpos[i]),rot_err_at_best_pos=float(brot[i])))
-        d=(term|trunc);lifted_steps[d]=0;best[d]=9.;maxz[d]=0.;bpos[d]=9.;brot[d]=999.
+        d=(term|trunc);lifted_steps[d]=0;air[d]=0;best[d]=9.;maxz[d]=0.;bpos[d]=9.;brot[d]=999.
         if bank is not None:kind=torch.where(d,bank.current_kind,kind)
         for s in pl.player.states:s[:,d]=0
     g=np.array([r['goals'] for r in rows]);ls=np.array([r['lifted_steps'] for r in rows]);b=np.array([r['best_kp'] for r in rows])
@@ -73,6 +75,8 @@ def run(a):
     out=dict(run=str(a.run_dir),epoch=ck.get('epoch'),episodes=len(rows),success_threshold_m=tol,
         lifted_rate=float(lifted.mean()),any_goal_rate=float((g>=1).mean()),timeout_rate=float(np.mean([r['timeout'] for r in rows])),
         lifted_steps_median=float(np.median(ls[lifted])) if lifted.any() else 0.,
+        air_steps_median_of_lifted=float(np.median([r['air_steps'] for r in rows if r['lifted_steps']>0])) if lifted.any() else 0.,
+        air_ge_rate={str(t):float(np.mean([r['air_steps']>=t for r in rows])) for t in (60,150,300)},
         best_kp_while_lifted_quantiles_m=np.quantile(b[lifted],[.1,.25,.5,.75]).round(4).tolist() if lifted.any() else None,
         within_2x_threshold=float((b[lifted]<2*tol).mean()) if lifted.any() else 0.,
         max_object_z_median=float(np.median([r['max_z'] for r in rows])),
@@ -86,7 +90,7 @@ def run(a):
             best_pos_err_median_m=float(np.median([x['best_pos_err'] for x in r])),rot_err_at_best_pos_median_deg=float(np.median([x['rot_err_at_best_pos'] for x in r])),
             lifted_steps_median=float(np.median([x['lifted_steps'] for x in r])))
     out['per_kind']=per
-    a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(dict(out,episodes_detail=rows[:400]),indent=1))
+    a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(dict(out,episodes_detail=rows),indent=1))
     print('DIAG',json.dumps(out),flush=True)
 
 

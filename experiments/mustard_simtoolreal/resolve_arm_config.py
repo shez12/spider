@@ -61,6 +61,55 @@ def solve(chain,target,seed,ref,lim,iters=300,damp=1e-3,null=.15,step=.5):
     return q,np.linalg.norm(e[:,:3],axis=1),np.degrees(np.linalg.norm(e[:,3:],axis=1))
 
 
+def _rotvec_t(R):
+    """scipy Rotation.from_matrix(R).as_rotvec() for (N, 3, 3) rotation matrices."""
+    import torch
+    tr=R[:,0,0]+R[:,1,1]+R[:,2,2];dec=torch.stack([R[:,0,0],R[:,1,1],R[:,2,2],tr],1);choice=dec.argmax(1);Q=torch.empty(len(R),4,dtype=R.dtype,device=R.device)
+    for i in range(3):
+        j,k=(i+1)%3,(i+2)%3;m=choice==i
+        Q[m,i]=1-tr[m]+2*R[m,i,i];Q[m,j]=R[m,j,i]+R[m,i,j];Q[m,k]=R[m,k,i]+R[m,i,k];Q[m,3]=R[m,k,j]-R[m,j,k]
+    m=choice==3;Q[m,0]=R[m,2,1]-R[m,1,2];Q[m,1]=R[m,0,2]-R[m,2,0];Q[m,2]=R[m,1,0]-R[m,0,1];Q[m,3]=1+tr[m]
+    Q=Q/Q.norm(dim=1,keepdim=True);Q=torch.where(Q[:,3:]<0,-Q,Q)
+    angle=2*torch.atan2(Q[:,:3].norm(dim=1),Q[:,3]);a2=angle**2
+    scale=torch.where(angle<=1e-3,2+a2/12+7*a2*a2/2880,angle/torch.sin(angle/2).clamp(min=1e-300))
+    return scale[:,None]*Q[:,:3]
+
+
+def _skew_t(v):
+    import torch
+    z=torch.zeros_like(v[...,0])
+    return torch.stack([torch.stack([z,-v[...,2],v[...,1]],-1),torch.stack([v[...,2],z,-v[...,0]],-1),torch.stack([-v[...,1],v[...,0],z],-1)],-2)
+
+
+def solve_torch(chain,target,seed,ref,lim,iters=300,damp=1e-3,null=.15,step=.5,device='cpu'):
+    """solve() in batched torch float64 with the analytic Jacobian of the same pose error (geometric Jacobian, rotation
+    rows mapped through the inverse right Jacobian of SO(3)) instead of 7 finite-difference fk calls per iteration.
+    Same update rule, iterations, numpy inputs and outputs; the solutions agree with solve() to ~1e-6 rad."""
+    import torch
+    f=dict(dtype=torch.float64,device=device);t=lambda x:torch.as_tensor(np.asarray(x),**f)
+    ch=[(t(o),None if a is None else (lambda u:(torch.tensor([[0,-u[2],u[1]],[u[2],0,-u[0]],[-u[1],u[0],0]],**f),t(u),float(np.linalg.norm(a))))(a/np.linalg.norm(a))) for o,a in chain]
+    tgt=t(target);q=t(seed).clone();rf=t(ref);lo,hi=t(lim[:,0]),t(lim[:,1]);n=len(q);I7=torch.eye(7,**f);I6=torch.eye(6,**f);I3=torch.eye(3,**f)
+    def fk_axes(q):
+        T=torch.eye(4,**f).expand(n,4,4);Z,Pj,i=[],[],0
+        for origin,axis in ch:
+            T=T@origin
+            if axis is not None:
+                K,u,sc=axis;Z.append((T[:,:3,:3]@u)*sc);Pj.append(T[:,:3,3]);th=q[:,i]*sc;s,c=torch.sin(th)[:,None,None],torch.cos(th)[:,None,None]
+                R=torch.eye(4,**f).repeat(n,1,1);R[:,:3,:3]+=s*K+(1-c)*(K@K);T=T@R;i+=1
+        return T,torch.stack(Z,2),torch.stack(Pj,2)
+    def err(T):return torch.cat([tgt[:,:3,3]-T[:,:3,3],_rotvec_t(tgt[:,:3,:3]@T[:,:3,:3].transpose(1,2))],1)
+    for it in range(iters):
+        T,Z,Pj=fk_axes(q);e=err(T);phi=e[:,3:];th=phi.norm(dim=1)[:,None,None];S=_skew_t(phi)
+        coef=torch.where(th<1e-4,torch.full_like(th,1/12),1/th.clamp(min=1e-12)**2-(1+torch.cos(th))/(2*th.clamp(min=1e-12)*torch.sin(th).clamp(min=1e-300)))
+        Jv=torch.linalg.cross(Z,T[:,:3,3,None]-Pj,dim=1);Jc=torch.cat([Jv,(I3+.5*S+coef*(S@S))@Z],1)
+        JT=Jc.transpose(1,2);pinv=JT@torch.linalg.inv(Jc@JT+damp*I6)
+        pull=null*(rf-q) if it<iters-40 else 0*q
+        d=(pinv@e[...,None])[...,0]+((I7-pinv@Jc)@pull[...,None])[...,0]
+        m=d.abs().max(1,keepdim=True).values;q=torch.clamp(q+step*d*torch.minimum(torch.ones_like(m),.3/m.clamp(min=1e-9)),lo,hi)
+    e=err(fk_axes(q)[0])
+    return q.cpu().numpy(),e[:,:3].norm(dim=1).cpu().numpy(),np.degrees(e[:,3:].norm(dim=1).cpu().numpy())
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__,formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--bank',type=Path,required=True);p.add_argument('--native',type=Path,nargs='+',required=True,help='left_grasp_mpc trajectories.npz (first frame = settled native start)')

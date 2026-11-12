@@ -1,0 +1,59 @@
+<robot name="potted_meat_can">
+  <link name="object_root">
+    <inertial>
+      <origin xyz="0.0012470204199337238 0.00046915719766006024 0.0001545479399095329" rpy="0 0 0" />
+      <mass value="0.32460081185292305" />
+      <inertia ixx="0.0003007045244832713" iyy="0.0005005425137387742" izz="0.0003606108623638677" ixy="-1.376094369766983e-05" ixz="1.4272923083910087e-05" iyz="3.2004129971898213e-06" />
+    </inertial>
+    <collision name="right_object_0">
+      <geometry>
+        <mesh filename="right_object_0.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_1">
+      <geometry>
+        <mesh filename="right_object_1.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_2">
+      <geometry>
+        <mesh filename="right_object_2.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_3">
+      <geometry>
+        <mesh filename="right_object_3.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_4">
+      <geometry>
+        <mesh filename="right_object_4.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_5">
+      <geometry>
+        <mesh filename="right_object_5.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_6">
+      <geometry>
+        <mesh filename="right_object_6.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_7">
+      <geometry>
+        <mesh filename="right_object_7.obj" />
+      </geometry>
+    </collision>
+    <collision name="right_object_8">
+      <geometry>
+        <mesh filename="right_object_8.obj" />
+      </geometry>
+    </collision>
+    <visual name="right_object_visual">
+      <geometry>
+        <mesh filename="right_object_visual.obj" />
+      </geometry>
+    </visual>
+  </link>
+</robot>

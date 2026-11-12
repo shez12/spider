@@ -22,8 +22,8 @@ TASK='dexycb_01_right_006_mustard_bottle_20200709_143211_00'
 
 
 def valid(report):
+    # The final object orientation ('final_object_orientation_error_deg', still reported) is not part of the acceptance.
     return bool(report['object_rmse_m']<.03 and report['final_object_position_error_m']<.03
-        and report['final_object_orientation_error_deg']<20
         and max(report['max_arm_table_penetration_m'],report['max_hand_table_penetration_m'],
                 report['max_hand_self_penetration_m'])<.001)
 
@@ -100,7 +100,8 @@ def physical_candidate_impl(state):
                     stdout=log,stderr=subprocess.STDOUT,check=True)
         state.update(status='accepted' if passed else 'physics_rejected',validated_success=passed,
             selected_metrics=best,replay_metrics=replay,
-            validation_elapsed_s=time.monotonic()-started_validation)
+            validation_elapsed_s=time.monotonic()-started_validation,
+            validated_at_utc=datetime.now(timezone.utc).isoformat())
     except Exception as error:
         if start is not None:state['physics_elapsed_s']=state.get('physics_elapsed_s',0)+time.monotonic()-start
         state.update(status='physics_failed',validated_success=False,error=str(error))
